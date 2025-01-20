@@ -1,0 +1,120 @@
+<link rel="stylesheet" href="/css/profile.css" />
+<!-- Trong file profile.ejs -->
+<div class="profile-container">
+  <h2 class="text-center mb-4">Your Profile</h2>
+
+  <!-- Hiển thị Avatar người dùng -->
+  <div class="text-center position-relative">
+    <img
+      src="img/undraw_profile.svg"
+      alt="Avatar"
+      class="rounded-circle"
+      width="150"
+      height="150"
+      id="avatarImage"
+    />
+
+    <!-- Biểu tượng thay đổi ảnh -->
+    <label for="avatarInput" class="btn-change-avatar">
+      <i class="fas fa-camera"></i> Change Avatar
+    </label>
+    <input
+      type="file"
+      id="avatarInput"
+      accept="image/*"
+      style="display: none"
+      onchange="previewAvatar(event)"
+    />
+  </div>
+
+  <!-- Hiển thị tên người dùng -->
+  <div class="profile-info mt-4">
+    <p><strong>Name:</strong> <%= user.name %></p>
+    <p><strong>Email:</strong> <%= user.email %></p>
+    <p>
+      <strong>Facebook:</strong>
+      <% if (user.UserSocials.some(social => social.dataValues.provider ===
+      'facebook')) { %> Đã liên kết
+      <a href="#" class="btn btn-success btn-circle">
+        <i class="fas fa-check"></i>
+      </a>
+      <% } else { %> Chưa liên kết <% } %>
+    </p>
+
+    <!-- Kiểm tra xem có Google đã liên kết hay không -->
+    <p>
+      <strong>Google:</strong>
+      <% if (user.UserSocials.some(social => social.dataValues.provider ===
+      'google')) { %> Đã liên kết
+      <a href="#" class="btn btn-success btn-circle">
+        <i class="fas fa-check"></i>
+      </a>
+      <% } else { %> Chưa liên kết <% } %>
+    </p>
+  </div>
+
+  <!-- Các nút liên kết với Facebook và Google -->
+  <div class="social-links mt-4 text-center">
+    <a
+      href="/auth/facebook/redirect"
+      class="btn btn-primary btn-user btn-block"
+    >
+      <i class="fab fa-facebook-f"></i> Link with Facebook
+    </a>
+    <a href="/auth/google/redirect" class="btn btn-danger btn-user btn-block">
+      <i class="fab fa-google"></i> Link with Google
+    </a>
+  </div>
+
+  <!-- Thay đổi mật khẩu -->
+  <div class="change-password mt-4">
+    <h4>Change Password</h4>
+    <form action="/auth/change-password" method="POST">
+      <div class="form-group">
+        <input
+          type="password"
+          name="password"
+          class="form-control"
+          placeholder="Current Password"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <input
+          type="password"
+          name="newPassword"
+          class="form-control"
+          placeholder="New Password"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <input
+          type="password"
+          name="confirmPassword"
+          class="form-control"
+          placeholder="Confirm New Password"
+          required
+        />
+      </div>
+      <button type="submit" class="btn btn-warning btn-user btn-block">
+        Change Password
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+  function previewAvatar(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      const avatarImg = document.getElementById("avatarImage");
+      avatarImg.src = e.target.result; // Thay đổi src của ảnh avatar
+    };
+
+    if (file) {
+      reader.readAsDataURL(file); // Đọc ảnh đã chọn
+    }
+  }
+</script>
