@@ -1,8 +1,7 @@
 const express = require("express");
+const errorController = require("../controllers/admin/error.controller");
 const router = express.Router();
 
-router.get("/", function (req, res, next) {
-  res.render("error", { title: "Not found" });
-});
+router.get("/", errorController.error);
 
 module.exports = router;

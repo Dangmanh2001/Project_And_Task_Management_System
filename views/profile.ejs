@@ -1,6 +1,12 @@
 <link rel="stylesheet" href="/css/profile.css" />
 <!-- Trong file profile.ejs -->
 <div class="profile-container">
+  <% if (messages.length) { %>
+    <div class="alert alert-danger">
+      <%= messages %>
+    </div>
+  <% } %>
+  
   <h2 class="text-center mb-4">Your Profile</h2>
 
   <!-- Hiển thị Avatar người dùng -->
@@ -31,26 +37,40 @@
   <div class="profile-info mt-4">
     <p><strong>Name:</strong> <%= user.name %></p>
     <p><strong>Email:</strong> <%= user.email %></p>
+    <form action="/unlink/facebook" method="POST">
     <p>
       <strong>Facebook:</strong>
-      <% if (user.UserSocials.some(social => social.dataValues.provider ===
-      'facebook')) { %> Đã liên kết
-      <a href="#" class="btn btn-success btn-circle">
-        <i class="fas fa-check"></i>
-      </a>
-      <% } else { %> Chưa liên kết <% } %>
+      <% if (user.UserSocials.some(social => social.dataValues.provider === 'facebook')) { %>
+        Đã liên kết
+        <a href="#" class="btn btn-success btn-circle">
+          <i class="fas fa-check"></i>
+        </a>
+        <!-- Nút hủy liên kết -->
+        <button type="submit" class="btn btn-danger float-right">
+          <i class="fas fa-times"></i> Hủy liên kết
+        </button>
+      <% } else { %>
+        Chưa liên kết
+      <% } %>
     </p>
-
-    <!-- Kiểm tra xem có Google đã liên kết hay không -->
+  </form>
+    <form action="/unlink/google" method="POST">
     <p>
       <strong>Google:</strong>
-      <% if (user.UserSocials.some(social => social.dataValues.provider ===
-      'google')) { %> Đã liên kết
-      <a href="#" class="btn btn-success btn-circle">
-        <i class="fas fa-check"></i>
-      </a>
-      <% } else { %> Chưa liên kết <% } %>
+      <% if (user.UserSocials.some(social => social.dataValues.provider === 'google')) { %>
+        Đã liên kết
+        <a href="#" class="btn btn-success btn-circle">
+          <i class="fas fa-check"></i>
+        </a>
+        <!-- Nút hủy liên kết -->
+        <button type="submit" class="btn btn-danger float-right">
+          <i class="fas fa-times"></i> Hủy liên kết
+        </button>
+      <% } else { %>
+        Chưa liên kết
+      <% } %>
     </p>
+  </form>
   </div>
 
   <!-- Các nút liên kết với Facebook và Google -->
@@ -69,40 +89,73 @@
   <!-- Thay đổi mật khẩu -->
   <div class="change-password mt-4">
     <h4>Change Password</h4>
-    <form action="/auth/change-password" method="POST">
+    <form action="/change-password" method="POST">
       <div class="form-group">
         <input
           type="password"
           name="password"
+          id="password"
           class="form-control"
           placeholder="Current Password"
           required
         />
+        <i id="toggleCurrentPassword" class="fas fa-eye" onclick="togglePasswordVisibility('password', 'toggleCurrentPassword')"></i>
       </div>
+      
       <div class="form-group">
         <input
           type="password"
           name="newPassword"
+          id="newPassword"
           class="form-control"
           placeholder="New Password"
           required
         />
+        <span id="newPasswordStatus" style="color: green; font-size: 16px; display: none;">
+          ✔ Mật khẩu khớp nhau
+        </span>
+        <i id="toggleNewPassword" class="fas fa-eye" onclick="togglePasswordVisibility('newPassword', 'toggleNewPassword')"></i>
       </div>
+      
       <div class="form-group">
         <input
           type="password"
           name="confirmPassword"
+          id="confirmPassword"
           class="form-control"
           placeholder="Confirm New Password"
           required
         />
+        <span id="confirmPasswordStatus" style="color: green; font-size: 16px; display: none;">
+          ✔ Mật khẩu khớp nhau
+        </span>
+        <i id="toggleConfirmPassword" class="fas fa-eye" onclick="togglePasswordVisibility('confirmPassword', 'toggleConfirmPassword')"></i>
       </div>
+      
+      
+      
       <button type="submit" class="btn btn-warning btn-user btn-block">
         Change Password
       </button>
     </form>
   </div>
 </div>
+<style>
+  /* Đảm bảo rằng các biểu tượng con mắt không bị chồng lên và có thể nhấn được */
+.form-group {
+  position: relative; /* Để các phần tử con như icon có thể định vị tương đối */
+}
+
+i.fas.fa-eye {
+  position: absolute; /* Đặt biểu tượng con mắt vào vị trí tuyệt đối */
+  right: 10px;  /* Khoảng cách từ bên phải */
+  top: 50%; /* Đặt ở giữa theo chiều dọc */
+  transform: translateY(-50%); /* Căn giữa con mắt theo chiều dọc */
+  cursor: pointer; /* Đảm bảo con mắt có thể nhấn được */
+  z-index: 10; /* Đặt z-index để biểu tượng con mắt nằm trên các phần tử khác */
+}
+
+</style>
 <script>
   function previewAvatar(event) {
     const file = event.target.files[0];
@@ -117,4 +170,51 @@
       reader.readAsDataURL(file); // Đọc ảnh đã chọn
     }
   }
+</script>
+
+<script>
+  // Hàm kiểm tra mật khẩu khớp
+function checkPasswordsMatch() {
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const newPasswordStatus = document.getElementById('newPasswordStatus');
+  const confirmPasswordStatus = document.getElementById('confirmPasswordStatus');
+
+
+  if (newPassword.length === 0 && confirmPassword.length === 0) {
+    newPasswordStatus.style.display = 'none';
+    confirmPasswordStatus.style.display = 'none';
+  }
+    // Kiểm tra sự khớp giữa mật khẩu mới và xác nhận mật khẩu
+  else if (newPassword === confirmPassword) {
+    newPasswordStatus.style.display = 'inline';  // Hiển thị dấu tích cho mật khẩu mới
+    confirmPasswordStatus.style.display = 'inline';  // Hiển thị dấu tích cho mật khẩu xác nhận
+  } else {
+    newPasswordStatus.style.display = 'none';  // Ẩn dấu tích nếu không khớp
+    confirmPasswordStatus.style.display = 'none';  // Ẩn dấu tích nếu không khớp
+  }
+}
+
+// Thêm sự kiện input để kiểm tra khi người dùng gõ
+document.getElementById('newPassword').addEventListener('input', checkPasswordsMatch);
+document.getElementById('confirmPassword').addEventListener('input', checkPasswordsMatch);
+
+// Hàm ẩn/hiện mật khẩu khi người dùng nhấn vào biểu tượng con mắt
+function togglePasswordVisibility(inputId, iconId) {
+  const passwordInput = document.getElementById(inputId);
+  const passwordIcon = document.getElementById(iconId);
+
+  // Kiểm tra nếu mật khẩu đang được ẩn, thì hiển thị và thay đổi icon
+  if (passwordInput.type === "password") {
+    passwordInput.type = "text"; // Hiển thị mật khẩu
+    passwordIcon.classList.remove("fa-eye");
+    passwordIcon.classList.add("fa-eye-slash"); // Thay đổi icon thành icon ẩn mật khẩu
+  } else {
+    passwordInput.type = "password"; // Ẩn mật khẩu
+    passwordIcon.classList.remove("fa-eye-slash");
+    passwordIcon.classList.add("fa-eye"); // Thay đổi icon thành icon hiển thị mật khẩu
+  }
+}
+
+
 </script>
