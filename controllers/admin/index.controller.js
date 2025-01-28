@@ -19,7 +19,6 @@ module.exports = {
         },
       ],
     });
-    console.log(user.dataValues.Role)
     res.render("index", {
       title: "Express",
       user,

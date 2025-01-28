@@ -1,71 +1,85 @@
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const model = require("../models/index");
-
-const User = model.User;
-const User_social = model.UserSocial;
 const { Op } = require("sequelize");
+const User = model.User;
+const UserSocial = model.UserSocial;
 
 module.exports = new GoogleStrategy(
   {
-    clientID: process.env.GOOGLE_CLIENT_ID, // Lấy từ Google Developer Console
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Lấy từ Google Developer Console
-    callbackURL: process.env.GOOGLE_CALLBACK_URL, // Địa chỉ callback mà Google sẽ gọi lại
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
     scope: ["profile", "email"],
     passReqToCallback: true,
   },
   async (req, accessToken, refreshToken, profile, cb) => {
-    const { id, provider } = profile;
-    const { email } = profile._json; // Lấy email từ thông tin trả về của Google
+    try {
+      const { id: googleId, provider } = profile; // provider = 'google'
+      const { email } = profile._json;
 
-    if (!req.user) {
-      // Kiểm tra xem tài khoản Google đã liên kết với người dùng chưa
-      const providerLogin = await User_social.findOne({
-        where: {
-          [Op.and]: [{ provider: provider }, { providerId: id }],
-        },
-      });
+      // 1) Nếu user chưa đăng nhập, => "đăng nhập" bằng Google
+      if (!req.user) {
+        // Tìm xem Google ID này có trong DB chưa
+        const foundLink = await UserSocial.findOne({
+          where: {
+            provider: provider,    // 'google'
+            providerId: googleId, // Google ID
+          },
+        });
 
-      if (!providerLogin) {
-        return cb(null, false, { message: "Tài khoản chưa được liên kết" });
+        if (!foundLink) {
+          // Chưa liên kết => Tuỳ ý: tạo user mới / báo lỗi / ...
+          return cb(null, false, { message: "Tài khoản Google này chưa được liên kết!" });
+        }
+
+        // Đã liên kết => lấy user
+        const user = await User.findByPk(foundLink.userId);
+        if (!user) {
+          return cb(null, false, { message: "Không tìm thấy user tương ứng!" });
+        }
+
+        // Đăng nhập thành công
+        return cb(null, user);
       }
 
-      // Nếu tài khoản đã được liên kết, tìm người dùng
-      const user = await User.findOne({
+      // 2) Nếu user đã đăng nhập => đang muốn liên kết Google
+      // Kiểm tra xem user này đã liên kết Google chưa
+      const existingLinkForThisUser = await UserSocial.findOne({
         where: {
-          id: providerLogin.userId,
+          userId: req.user.id,
+          provider: provider, // google
         },
       });
 
-      // Lưu giá trị vào session
-      req.session.verify = "done";
+      if (existingLinkForThisUser) {
+        req.session.verify = "done"
+        return cb(null, false, { message: "Bạn đã liên kết Google trước đó!" });
+      }
 
-      return cb(null, user);
-    }
-
-    // Kiểm tra xem tài khoản đã được liên kết chưa
-    const providerLink = await User_social.findOne({
-      where: {
-        [Op.and]: [{ providerId: id }, { provider: provider }],
-      },
-    });
-
-    if (!providerLink) {
-      // Nếu chưa liên kết, thực hiện liên kết tài khoản Google với người dùng hiện tại
-      await User_social.create({
-        userId: req.user.id,
-        provider,
-        providerId: id,
+      // Kiểm tra xem Google ID này có gắn với user khác chưa
+      const foundLinkWithAnotherUser = await UserSocial.findOne({
+        where: {
+          provider: provider, 
+          providerId: googleId,
+        },
       });
 
-      // Lưu giá trị vào session
-      req.session.verify = "done";
+      if (foundLinkWithAnotherUser) {
+        // Tài khoản Google này đã liên kết với user khác
+        return cb(null, false, { message: "Tài khoản Google này đã được liên kết cho user khác!" });
+      }
 
+      // Nếu qua hết các bước kiểm tra => Tạo mới
+      await UserSocial.create({
+        userId: req.user.id,
+        provider,
+        providerId: googleId,
+      });
+      req.session.verify = "done"
       return cb(null, req.user);
+    } catch (error) {
+      console.error("Lỗi GoogleStrategy:", error);
+      return cb(error);
     }
-
-    // Nếu tài khoản đã liên kết, trả về thông báo
-    return cb(null, false, {
-      message: "Tài khoản này đã được liên kết",
-    });
   }
 );

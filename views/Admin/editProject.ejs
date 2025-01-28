@@ -1,0 +1,73 @@
+<div class="container-fluid">
+    <h1 class="mb-4">Sửa Dự Án</h1>
+  
+    <!-- Hiển thị thông báo lỗi và thành công -->
+    <% if (success.length > 0) { %>
+      <div class="alert alert-success">
+        <% success.forEach(message => { %>
+          <p><%= message %></p>
+        <% }) %>
+      </div>
+    <% } %>
+  
+    <% if (error.length > 0) { %>
+      <div class="alert alert-danger">
+        <% error.forEach(message => { %>
+          <p><%= message %></p>
+        <% }) %>
+      </div>
+    <% } %>
+  
+    <!-- Form sửa dự án -->
+    <form action="/edit-project/<%= project.id %>" method="POST">
+      <!-- Tên dự án -->
+      <div class="mb-3">
+        <label for="name" class="form-label">Tên dự án</label>
+        <input type="text" class="form-control" id="name" name="name" value="<%= project.name %>" required />
+      </div>
+  
+      <!-- Mô tả -->
+      <div class="mb-3">
+        <label for="description" class="form-label">Mô tả</label>
+        <textarea class="form-control" id="description" name="description" rows="3" required><%= project.description %></textarea>
+      </div>
+  
+      <!-- Ngày bắt đầu -->
+      <div class="mb-3">
+        <label for="start_date" class="form-label">Ngày bắt đầu</label>
+        <input type="date" class="form-control" id="start_date" name="start_date" value="<%= project.start_date.toISOString().split('T')[0] %>" required />
+      </div>
+  
+      <!-- Ngày kết thúc -->
+      <div class="mb-3">
+        <label for="end_date" class="form-label">Ngày kết thúc</label>
+        <input type="date" class="form-control" id="end_date" name="end_date" value="<%= project.end_date.toISOString().split('T')[0] %>" required />
+      </div>
+  
+      <!-- Trạng thái -->
+      <div class="mb-3">
+        <label for="status" class="form-label">Trạng thái</label>
+        <select class="form-select" id="status" name="status" required>
+          <option value="Đang thực hiện" <%= project.status === 'Đang thực hiện' ? 'selected' : '' %>>Đang thực hiện</option>
+          <option value="Hoàn thành" <%= project.status === 'Hoàn thành' ? 'selected' : '' %>>Hoàn thành</option>
+          <option value="Chưa bắt đầu" <%= project.status === 'Chưa bắt đầu' ? 'selected' : '' %>>Chưa bắt đầu</option>
+          <option value="Ngưng hoạt động" <%= project.status === 'Ngưng hoạt động' ? 'selected' : '' %>>Ngưng hoạt động</option>
+        </select>
+      </div>
+  
+      <!-- Người tạo -->
+      <div class="mb-3">
+        <label for="created_by" class="form-label">Người tạo</label>
+        <select class="form-select" id="created_by" name="created_by" required>
+          <% users.forEach(user => { %>
+            <option value="<%= user.id %>" <%= user.id === project.created_by ? 'selected' : '' %>><%= user.name %></option>
+          <% }) %>
+        </select>
+      </div>
+  
+      <button type="submit" class="btn btn-success">Cập nhật dự án</button>
+    </form>
+  
+    <a href="/list-project" class="btn btn-secondary mt-3">Quay lại</a>
+  </div>
+  

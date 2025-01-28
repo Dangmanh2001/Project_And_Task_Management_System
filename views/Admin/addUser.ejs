@@ -1,0 +1,66 @@
+<div class="container-fluid">
+  <h1 class="mb-4">Thêm người dùng mới</h1>
+
+  <!-- Form thêm người dùng -->
+  <form action="/add-user" method="POST">
+    <% if (success.length > 0) { %>
+    <div class="alert alert-success">
+      <% success.forEach(message => { %>
+      <p><%= message %></p>
+      <% }) %>
+    </div>
+    <% } %> <% if (error.length > 0) { %>
+    <div class="alert alert-danger">
+      <% error.forEach(message => { %>
+      <p><%= message %></p>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <!-- Tên người dùng -->
+    <div class="mb-3">
+      <label for="name" class="form-label">Tên người dùng</label>
+      <input type="text" class="form-control" id="name" name="name" required />
+    </div>
+
+    <!-- Email -->
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input
+        type="email"
+        class="form-control"
+        id="email"
+        name="email"
+        required
+      />
+    </div>
+
+    <!-- Vai trò -->
+    <div class="mb-3">
+      <label for="role" class="form-label">Vai trò</label>
+      <select class="form-select" id="role" name="role" required>
+        <% roles.forEach(role => { %>
+        <option value="<%= role.id %>"><%= role.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Mật khẩu -->
+    <div class="mb-3">
+      <label for="password" class="form-label">Mật khẩu</label>
+      <input
+        type="password"
+        class="form-control"
+        id="password"
+        name="password"
+        required
+      />
+    </div>
+
+    <!-- Nút lưu thay đổi -->
+    <button type="submit" class="btn btn-success">Thêm người dùng</button>
+  </form>
+
+  <!-- Quay lại trang danh sách người dùng -->
+  <a href="/add-user" class="btn btn-secondary mt-3">Quay lại</a>
+</div>

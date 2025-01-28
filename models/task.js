@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Task.belongsTo(models.Project, {
         foreignKey: "project_id",
+        onDelete: "CASCADE", // Xóa tất cả projects liên quan khi xóa dự án
       });
       Task.belongsTo(models.User, {
         foreignKey: "assignee",

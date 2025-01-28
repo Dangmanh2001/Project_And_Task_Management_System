@@ -1,0 +1,79 @@
+<div class="container-fluid">
+  <h1 class="mb-4">Thêm Dự Án Mới</h1>
+
+  <!-- Form thêm dự án -->
+  <form action="/add-project" method="POST">
+    <% if (success.length > 0) { %>
+    <div class="alert alert-success">
+      <% success.forEach(message => { %>
+      <p><%= message %></p>
+      <% }) %>
+    </div>
+    <% } %> <% if (error.length > 0) { %>
+    <div class="alert alert-danger">
+      <% error.forEach(message => { %>
+      <p><%= message %></p>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <!-- Tên dự án -->
+    <div class="mb-3">
+      <label for="name" class="form-label">Tên dự án</label>
+      <input type="text" class="form-control" id="name" name="name" required />
+    </div>
+
+    <!-- Mô tả dự án -->
+    <div class="mb-3">
+      <label for="description" class="form-label">Mô tả</label>
+      <textarea
+        class="form-control"
+        id="description"
+        name="description"
+        rows="3"
+        required
+      ></textarea>
+    </div>
+
+    <!-- Ngày bắt đầu -->
+    <div class="mb-3">
+      <label for="start_date" class="form-label">Ngày bắt đầu</label>
+      <input
+        type="date"
+        class="form-control"
+        id="start_date"
+        name="start_date"
+        required
+      />
+    </div>
+
+    <!-- Ngày kết thúc -->
+    <div class="mb-3">
+      <label for="end_date" class="form-label">Ngày kết thúc</label>
+      <input
+        type="date"
+        class="form-control"
+        id="end_date"
+        name="end_date"
+        required
+      />
+    </div>
+
+    <!-- Trạng thái dự án -->
+    <div class="mb-3">
+      <label for="status" class="form-label">Trạng thái</label>
+      <select class="form-select" id="status" name="status" required>
+        <option value="Đang thực hiện">Đang thực hiện</option>
+        <option value="Hoàn thành">Hoàn thành</option>
+        <option value="Chưa bắt đầu">Chưa bắt đầu</option>
+        <option value="Ngưng hoạt động">Ngưng hoạt động</option>
+      </select>
+    </div>
+
+    <!-- Nút lưu dự án -->
+    <button type="submit" class="btn btn-success">Thêm Dự Án</button>
+  </form>
+
+  <!-- Quay lại trang danh sách dự án -->
+  <a href="/list-project" class="btn btn-secondary mt-3">Quay lại</a>
+</div>

@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       });
       Project.hasMany(models.Task, {
         foreignKey: "project_id",
+        onDelete: "CASCADE", // Xóa tất cả tasks liên quan khi xóa dự án
       });
       Project.belongsToMany(models.User, {
         through: "UserProjects",
