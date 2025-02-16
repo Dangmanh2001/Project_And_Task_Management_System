@@ -26,7 +26,13 @@ module.exports = {
           model: "Roles",
           key: "id",
         },
+        onDelete: "CASCADE",
+
         allowNull: false,
+      },
+      avatar: {
+        type: Sequelize.STRING(255), // Chứa liên kết đến ảnh
+        allowNull: true, // Nếu không bắt buộc thì để allowNull là true
       },
       createdAt: {
         type: Sequelize.DATE,

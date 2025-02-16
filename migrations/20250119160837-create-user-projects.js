@@ -13,6 +13,8 @@ module.exports = {
           model: "Users",
           key: "id",
         },
+        onDelete: "CASCADE",
+
         allowNull: false,
       },
       project_id: {
@@ -21,6 +23,8 @@ module.exports = {
           model: "Projects",
           key: "id",
         },
+        onDelete: "CASCADE",
+
         allowNull: false,
       },
       createdAt: {

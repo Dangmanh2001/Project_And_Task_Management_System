@@ -1,0 +1,98 @@
+<div class="container-fluid">
+    <h1 class="mb-4">Sửa Công Việc</h1>
+  
+    <!-- Hiển thị thông báo lỗi và thành công -->
+    <% if (success.length > 0) { %>
+      <div class="alert alert-success">
+        <% success.forEach(message => { %>
+          <p><%= message %></p>
+        <% }) %>
+      </div>
+    <% } %>
+  
+    <% if (error.length > 0) { %>
+      <div class="alert alert-danger">
+        <% error.forEach(message => { %>
+          <p><%= message %></p>
+        <% }) %>
+      </div>
+    <% } %>
+  
+    <!-- Form sửa công việc -->
+    <form action="/edit-task/<%= task.id %>" method="POST">
+      <!-- Tên công việc -->
+      <div class="mb-3">
+        <label for="name" class="form-label">Tên công việc</label>
+        <input
+          type="text"
+          class="form-control"
+          id="name"
+          name="name"
+          value="<%= task.name %>"
+          required
+        />
+      </div>
+  
+      <!-- Mô tả công việc -->
+      <div class="mb-3">
+        <label for="description" class="form-label">Mô tả</label>
+        <textarea
+          class="form-control"
+          id="description"
+          name="description"
+          rows="3"
+          required
+        ><%= task.description %></textarea>
+      </div>
+  
+      <!-- Trạng thái công việc -->
+      <div class="mb-3">
+        <label for="status" class="form-label">Trạng thái</label>
+        <select class="form-select" id="status" name="status" required>
+          <option value="Hoàn thành" <%= task.status === 'Hoàn thành' ? 'selected' : '' %>>Hoàn thành</option>
+          <option value="Đang thực hiện" <%= task.status === 'Đang thực hiện' ? 'selected' : '' %>>Đang thực hiện</option>
+          <option value="Chưa bắt đầu" <%= task.status === 'Chưa bắt đầu' ? 'selected' : '' %>>Chưa bắt đầu</option>
+          <option value="Ngưng hoạt động" <%= task.status === 'Ngưng hoạt động' ? 'selected' : '' %>>Ngưng hoạt động</option>
+        </select>
+      </div>
+  
+      <!-- Ngày hết hạn -->
+      <div class="mb-3">
+        <label for="due_date" class="form-label">Ngày hết hạn</label>
+        <input
+          type="date"
+          class="form-control"
+          id="due_date"
+          name="due_date"
+          value="<%= new Date(task.due_date).toISOString().split('T')[0] %>"
+
+        />
+      </div>
+  
+      <!-- Người giao công việc -->
+      <div class="mb-3">
+        <label for="assignee" class="form-label">Người giao</label>
+        <select class="form-select" id="assignee" name="assignee" required>
+          <% users.forEach(user => { %>
+            <option value="<%= user.id %>" <%= user.id === task.assignee ? 'selected' : '' %>><%= user.name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Dự án (Cập nhật project_id) -->
+      <div class="mb-3">
+        <label for="project_id" class="form-label">Dự án</label>
+        <select class="form-select" id="project_id" name="project_id" required>
+          <% projects.forEach(project => { %>
+            <option value="<%= project.id %>" <%= project.id === task.project_id ? 'selected' : '' %>><%= project.name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Nút cập nhật công việc -->
+      <button type="submit" class="btn btn-success">Cập nhật công việc</button>
+    </form>
+  
+    <!-- Quay lại trang danh sách công việc -->
+    <a href="/list-task" class="btn btn-secondary mt-3">Quay lại</a>
+</div>

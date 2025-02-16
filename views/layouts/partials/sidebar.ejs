@@ -5,7 +5,7 @@
   <!-- Sidebar - Brand -->
   <a
     class="sidebar-brand d-flex align-items-center justify-content-center"
-    href="index.html"
+    href="/"
   >
     <div class="sidebar-brand-icon rotate-n-15">
       <i class="fas fa-laugh-wink"></i>
@@ -31,6 +31,7 @@
   <div class="sidebar-heading">Manage</div>
 
   <!-- Nav Item - Pages Collapse Menu -->
+  <% if(user.role_id === 1 || user.role_id === 2) {%>
   <li class="nav-item">
     <a
       class="nav-link collapsed"
@@ -52,11 +53,13 @@
       <div class="bg-white py-2 collapse-inner rounded">
         <h6 class="collapse-header">User Components:</h6>
         <a class="collapse-item" href="/list-user">Danh sách</a>
+        <% if(user.role === 1) {%>
         <a class="collapse-item" href="/add-user">Thêm</a>
+        <% } %>
       </div>
     </div>
   </li>
-
+  <% } %>
   <!-- Nav Item - Utilities Collapse Menu -->
   <li class="nav-item">
     <a
@@ -79,7 +82,10 @@
       <div class="bg-white py-2 collapse-inner rounded">
         <h6 class="collapse-header">Project Components:</h6>
         <a class="collapse-item" href="/list-project">Danh sách</a>
+        <% if(user.role_id === 1) {%>
+
         <a class="collapse-item" href="/add-project">Thêm</a>
+        <% } %>
       </div>
     </div>
   </li>
@@ -105,7 +111,9 @@
       <div class="bg-white py-2 collapse-inner rounded">
         <h6 class="collapse-header">Task Components:</h6>
         <a class="collapse-item" href="/list-task">Danh sách</a>
+        <% if(user.role_id === 1 || user.role_id === 2) {%>
         <a class="collapse-item" href="/add-task">Thêm</a>
+        <% } %>
       </div>
     </div>
   </li>
@@ -114,7 +122,7 @@
   <hr class="sidebar-divider" />
 
   <!-- Heading -->
-  <div class="sidebar-heading">Addons</div>
+  <div class="sidebar-heading">Overview</div>
 
   <!-- Nav Item - Pages Collapse Menu -->
 
@@ -128,9 +136,16 @@
 
   <!-- Nav Item - Tables -->
   <li class="nav-item">
-    <a class="nav-link" href="/tables">
+    <a class="nav-link" href="/tablesP">
       <i class="fas fa-fw fa-table"></i>
-      <span>Calendar</span></a
+      <span>Calendar Project</span></a
+    >
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link" href="/tablesT">
+      <i class="fas fa-fw fa-table"></i>
+      <span>Calendar Task</span></a
     >
   </li>
 

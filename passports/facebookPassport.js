@@ -20,20 +20,22 @@ module.exports = new FacebookStrategy(
       // Giải nén thông tin từ profile Facebook
       const { _json, provider, id } = profile; // provider = "facebook"
       const { email } = _json; // email (nếu người dùng cấp quyền)
-      
+
       // 1) Người dùng chưa đăng nhập => dùng Facebook để đăng nhập
       if (!req.user) {
         // Tìm xem Facebook này đã liên kết UserSocial chưa
         const foundLink = await UserSocial.findOne({
           where: {
-            provider: provider,     // 'facebook'
-            providerId: id,        // Facebook ID
+            provider: provider, // 'facebook'
+            providerId: id, // Facebook ID
           },
         });
-        
+
         // Nếu chưa có => tùy ý: tạo user mới, hoặc báo "Chưa liên kết" (tùy logic dự án)
         if (!foundLink) {
-          return cb(null, false, { message: "Tài khoản Facebook này chưa được liên kết!" });
+          return cb(null, false, {
+            message: "Tài khoản Facebook này chưa được liên kết!",
+          });
         }
 
         // Nếu đã có => truy vấn user tương ứng
@@ -57,19 +59,23 @@ module.exports = new FacebookStrategy(
       if (existingLinkForThisUser) {
         // User này đã liên kết Facebook 1 lần
         req.session.verify = "done";
-        return cb(null, false, { message: "Bạn đã liên kết Facebook trước đó!" });
+        return cb(null, false, {
+          message: "Bạn đã liên kết Facebook trước đó!",
+        });
       }
 
       // Kiểm tra xem Facebook ID này có gắn với user khác chưa
       const foundLinkWithAnotherUser = await UserSocial.findOne({
         where: {
-          provider: provider, 
+          provider: provider,
           providerId: id,
         },
       });
       if (foundLinkWithAnotherUser) {
         // Tài khoản Facebook này đã được liên kết cho user khác
-        return cb(null, false, { message: "Tài khoản Facebook này đã được liên kết cho user khác!" });
+        return cb(null, false, {
+          message: "Tài khoản Facebook này đã được liên kết cho user khác!",
+        });
       }
 
       // Nếu qua hết các bước => Tạo mới liên kết
@@ -78,7 +84,7 @@ module.exports = new FacebookStrategy(
         provider,
         providerId: id,
       });
-      
+
       // Đặt cờ verify vào session (nếu bạn muốn)
       req.session.verify = "done";
 

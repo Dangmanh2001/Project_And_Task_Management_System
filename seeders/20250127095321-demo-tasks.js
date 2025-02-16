@@ -4,11 +4,11 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const tasks = [];
 
-    for (let i = 1; i <= 20; i++) {
+    for (let i = 1; i <= 19; i++) {
       tasks.push({
         name: `Task ${i}`,
         description: `Mô tả chi tiết cho task ${i}`,
-        project_id: Math.floor(Math.random() * (80 - 61 + 1)) + 61, // Chọn ngẫu nhiên project_id từ 21 đến 41
+        project_id: Math.floor(Math.random() * 20) + 1,
         assignee: 1, // Giả sử có 10 người dùng, chọn ngẫu nhiên
         status: [
           "Đang thực hiện",

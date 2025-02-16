@@ -13,6 +13,8 @@ module.exports = {
           model: "Users",
           key: "id",
         },
+        onDelete: "CASCADE",
+
         allowNull: false,
       },
       providerId: {

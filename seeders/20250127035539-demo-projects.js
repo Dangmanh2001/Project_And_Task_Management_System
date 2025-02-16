@@ -9,7 +9,12 @@ module.exports = {
         description: `Mô tả chi tiết cho dự án ${index + 1}`,
         start_date: new Date(),
         end_date: new Date(new Date().setDate(new Date().getDate() + 30)), // Thêm 30 ngày
-        status: "Đang thực hiện", // Trạng thái mặc định
+        status: [
+          "Đang thực hiện",
+          "Hoàn thành",
+          "Chưa bắt đầu",
+          "Ngưng hoạt động",
+        ][Math.floor(Math.random() * 4)], // Trạng thái mặc định
         created_by: 10, // Gán người tạo dự án là user có id = 1
         createdAt: new Date(),
         updatedAt: new Date(),

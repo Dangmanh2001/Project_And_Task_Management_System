@@ -4,6 +4,7 @@ const Project = model.Project;
 const UserSocial = model.UserSocial;
 const Role = model.Role;
 const Task = model.Task;
+const { Op, Sequelize } = require("sequelize");
 
 module.exports = {
   listProject: async (req, res) => {
@@ -122,6 +123,237 @@ module.exports = {
       console.error(error);
       req.flash("error", "Đã xảy ra lỗi khi thêm dự án!");
       res.redirect("/add-project"); // Quay lại trang thêm dự án
+    }
+  },
+  addUtoP: async (req, res) => {
+    const success = req.flash("success", "");
+    const error = req.flash("error", "");
+    const { id } = req.params;
+
+    try {
+      // Tìm dự án theo ID
+      const project = await Project.findByPk(id);
+      if (!project) {
+        req.flash("error", "Dự án không tồn tại!");
+        return res.redirect("/list-project");
+      }
+
+      // Lấy thông tin người dùng
+      const user = await User.findOne({
+        where: { id: req.user.id }, // Lọc theo id của người dùng
+        include: [
+          {
+            model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
+            required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
+          },
+          {
+            model: Role, // Bao gồm thông tin từ bảng Role
+            required: false, // Không bắt buộc phải có dữ liệu từ Role
+          },
+        ],
+      });
+
+      const page = parseInt(req.query.page) || 1;
+      const pageSize = 10; // Số lượng người dùng mỗi trang
+      const offset = (page - 1) * pageSize;
+
+      // Lấy danh sách người dùng không có trong bảng userprojects
+      const users = await User.findAll({
+        limit: pageSize,
+        offset: offset,
+        where: {
+          id: {
+            [Op.notIn]: Sequelize.literal(
+              `(SELECT user_id FROM userprojects WHERE project_id = ${project.id})`
+            ),
+          },
+        },
+        include: [
+          {
+            model: UserSocial,
+            required: false, // Không yêu cầu phải có thông tin UserSocial
+          },
+          {
+            model: Role,
+            required: false, // Không yêu cầu phải có thông tin Role
+          },
+          {
+            model: Project,
+            required: false, // Không yêu cầu phải có dự án
+          },
+        ],
+      });
+
+      // Tổng số người dùng để tính toán phân trang
+      const totalUsers = await User.count({
+        where: {
+          id: {
+            [Op.notIn]: Sequelize.literal(
+              `(SELECT user_id FROM userprojects WHERE project_id = ${project.id})`
+            ),
+          },
+        },
+      });
+
+      const totalPages = Math.ceil(totalUsers / pageSize);
+
+      // Render trang
+      res.render("Admin/addUserToProject", {
+        title: "Thêm Người Dùng Vào Dự Án",
+        success,
+        error,
+        users,
+        currentPage: page,
+        totalPages: totalPages,
+        user,
+        project,
+      });
+    } catch (error) {
+      console.error(error);
+      req.flash("error", "Đã xảy ra lỗi khi lấy dữ liệu!");
+      res.redirect("/list-project"); // Redirect đến danh sách dự án hoặc trang lỗi
+    }
+  },
+  handleAddUtoP: async (req, res) => {
+    const { id } = req.params; // ID dự án
+    const { user_id } = req.body; // Mảng các user_id được chọn
+
+    // Kiểm tra nếu không có người dùng nào được chọn
+    if (!user_id || (Array.isArray(user_id) && user_id.length === 0)) {
+      req.flash("error", "Vui lòng chọn ít nhất một người dùng!");
+      return res.redirect(`/add-user-to-project/${id}`);
+    }
+
+    try {
+      // Tìm dự án theo ID
+      const project = await Project.findByPk(id);
+
+      // Kiểm tra nếu dự án không tồn tại
+      if (!project) {
+        req.flash("error", "Dự án không tồn tại!");
+        return res.redirect(`/list-project`);
+      }
+
+      // Nếu user_id là mảng, sử dụng phương thức add để thêm tất cả người dùng vào dự án
+      if (Array.isArray(user_id)) {
+        // Thêm tất cả người dùng vào dự án
+        await project.addUsers(user_id);
+      } else {
+        // Nếu chỉ có một giá trị trong user_id, thêm người dùng đó vào dự án
+        await project.addUser(user_id); // Đảm bảo `addUser` đã được định nghĩa trong Sequelize association
+      }
+
+      req.flash("success", "Người dùng đã được thêm vào dự án!");
+      res.redirect(`/add-user-to-project/${id}`);
+    } catch (error) {
+      console.error(error);
+      req.flash("error", "Đã xảy ra lỗi khi thêm người dùng vào dự án!");
+      res.redirect(`/add-user-to-project/${id}`);
+    }
+  },
+  removeUToP: async (req, res) => {
+    const success = req.flash("success", "");
+    const error = req.flash("error", "");
+    const { id } = req.params;
+    const project = await Project.findByPk(id);
+    const user = await User.findOne({
+      where: { id: req.user.id }, // Lọc theo id của người dùng
+      include: [
+        {
+          model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
+          required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
+        },
+        {
+          model: Role, // Bao gồm thông tin từ bảng Role
+          required: false, // Không bắt buộc phải có dữ liệu từ Role
+        },
+      ],
+    });
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = 10; // Số lượng người dùng mỗi trang
+    const offset = (page - 1) * pageSize;
+
+    const users = await User.findAll({
+      limit: pageSize,
+      offset: offset,
+      include: [
+        {
+          model: Project,
+          where: { id: project.id }, // Lọc người dùng tham gia vào dự án cụ thể
+          through: { attributes: [] }, // Không cần lấy thông tin từ bảng trung gian
+          required: true, // Chỉ lấy những người dùng có liên kết với dự án
+        },
+        {
+          model: UserSocial,
+          required: false, // Không yêu cầu phải có thông tin UserSocial
+        },
+        {
+          model: Role,
+          required: false, // Không yêu cầu phải có thông tin Role
+        },
+      ],
+    });
+
+    // Tính tổng số người dùng đã tham gia vào dự án
+    const totalUsers = await User.count({
+      include: [
+        {
+          model: Project,
+          where: { id: project.id },
+          through: { attributes: [] },
+          required: true,
+        },
+      ],
+    });
+
+    const totalPages = Math.ceil(totalUsers / pageSize);
+    res.render("Admin/removeUserToProject", {
+      title: "Xóa Người Dùng Khỏi Dự Án",
+      success,
+      error,
+      users,
+      currentPage: page,
+      totalPages: totalPages,
+      user,
+      project,
+    });
+  },
+  handleRemoveUToP: async (req, res) => {
+    const { id } = req.params; // ID dự án
+    const { user_id } = req.body; // Mảng các user_id được chọn
+
+    // Kiểm tra nếu không có người dùng nào được chọn
+    if (!user_id || (Array.isArray(user_id) && user_id.length === 0)) {
+      req.flash("error", "Vui lòng chọn ít nhất một người dùng!");
+      return res.redirect(`/remove-user-from-project/${id}`); // Redirect đến trang xóa người dùng với id dự án
+    }
+
+    try {
+      // Tìm dự án theo ID
+      const project = await Project.findByPk(id);
+
+      // Kiểm tra nếu dự án không tồn tại
+      if (!project) {
+        req.flash("error", "Dự án không tồn tại!");
+        return res.redirect(`/list-project`); // Redirect đến danh sách dự án nếu không tìm thấy dự án
+      }
+
+      // Nếu user_id là mảng, sử dụng phương thức remove để xóa tất cả người dùng khỏi dự án
+      if (Array.isArray(user_id)) {
+        // Xóa tất cả người dùng khỏi dự án
+        await project.removeUsers(user_id);
+      } else {
+        // Nếu chỉ có một người dùng, xóa người đó khỏi dự án
+        await project.removeUser(user_id); // Đảm bảo `removeUser` đã được định nghĩa trong Sequelize association
+      }
+
+      req.flash("success", "Người dùng đã được xóa khỏi dự án!");
+      // Redirect về trang xóa người dùng khỏi dự án có kèm id
+      res.redirect(`/remove-user-from-project/${id}`);
+    } catch (error) {
+      console.error(error);
+      req.flash("error", "Đã xảy ra lỗi khi xóa người dùng khỏi dự án!");
+      res.redirect(`/remove-user-from-project/${id}`); // Redirect lại nếu có lỗi
     }
   },
   editProject: async (req, res) => {

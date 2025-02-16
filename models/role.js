@@ -6,6 +6,8 @@ module.exports = (sequelize, DataTypes) => {
       Role.belongsToMany(models.Permission, {
         through: "RolePermissions",
         foreignKey: "role_id",
+        otherKey: "permission_id", // Khóa ngoại của user
+        onDelete: "CASCADE",
       });
       Role.hasMany(models.User, {
         foreignKey: "role_id", // Khóa ngoại từ bảng User liên kết với bảng Role

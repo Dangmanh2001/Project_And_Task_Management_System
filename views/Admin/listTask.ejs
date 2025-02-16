@@ -40,9 +40,9 @@
         <td><%= task.description %></td>
         <td><%= task.status %></td>
         <td>
-          <%= new Date(task.due_date).toLocaleString('vi-VN', { weekday: 'long',
-          year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit',
-          minute: '2-digit' }) %>
+          <%= task.due_date ? new Date(task.due_date).toLocaleString('vi-VN', {
+          weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric',
+          hour: '2-digit', minute: '2-digit' }) : '' %>
         </td>
         <td><%= task.User ? task.User.name : 'Chưa có người giao' %></td>
         <td><%= task.Project ? task.Project.name : 'Chưa có dự án' %></td>
@@ -61,6 +61,18 @@
               <i class="fas fa-trash-alt"></i> Xóa
             </button>
           </form>
+          <a
+            href="/add-user-to-task/<%= task.id%>"
+            class="btn btn-success btn-sm"
+          >
+            <i class="fas fa-user-plus"></i> Thêm người dùng cho công việc
+          </a>
+          <a
+            href="/remove-user-from-task/<%= task.id %>"
+            class="btn btn-danger btn-sm"
+          >
+            <i class="fas fa-trash-alt"></i> Xóa người dùng khỏi công việc
+          </a>
         </td>
       </tr>
       <% }) %> <% } else { %>

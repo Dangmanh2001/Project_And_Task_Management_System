@@ -1,0 +1,98 @@
+<div class="container">
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Overview Chart</h6>
+    </div>
+    <div class="card-body" style="position: relative; height: 60vh">
+      <canvas id="myChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Status Chart</h6>
+    </div>
+    <div class="chart-container">
+      <div class="card-body">
+        <canvas id="myChart2"></canvas>
+      </div>
+      <div class="card-body">
+        <canvas id="myChart3"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const totalUsers = `<%= totalUsers %>`;
+  const totalProjects = `<%= totalProjects %>`;
+  const totalTasks = `<%= totalTasks %>`;
+  const status = `<%= status%>`;
+  const taskStatusValues = `<%= taskStatusValues%>`;
+  const projectStatusValues = `<%= projectStatusValues%>`;
+
+  let myChart = document.getElementById("myChart").getContext("2d");
+  let massPopChart1 = new Chart(myChart, {
+    type: "bar",
+    data: {
+      labels: ["Users", "Projects", "Tasks"],
+      datasets: [
+        {
+          label: "Project Overview",
+          data: [totalUsers, totalProjects, totalTasks],
+          backgroundColor: [
+            "rgba(255, 99, 132, 0.2)",
+            "rgba(255, 159, 64, 0.2)",
+            "rgba(255, 205, 86, 0.2)",
+          ],
+          borderColor: [
+            "rgb(255, 99, 132)",
+            "rgb(255, 159, 64)",
+            "rgb(255, 205, 86)",
+          ],
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+    },
+  });
+
+  let myChart2 = document.getElementById("myChart2").getContext("2d");
+  let massPopChart2 = new Chart(myChart2, {
+    type: "pie",
+    data: {
+      labels: status.split(","),
+      datasets: [
+        {
+          label: "Task",
+          data: taskStatusValues.split(","),
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+    },
+  });
+
+  let myChart3 = document.getElementById("myChart3").getContext("2d");
+  let massPopChart3 = new Chart(myChart3, {
+    type: "pie",
+    data: {
+      labels: status.split(","),
+      datasets: [
+        {
+          label: "Project",
+          data: projectStatusValues.split(","),
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+    },
+  });
+</script>

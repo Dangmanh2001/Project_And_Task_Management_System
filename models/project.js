@@ -13,6 +13,8 @@ module.exports = (sequelize, DataTypes) => {
       Project.belongsToMany(models.User, {
         through: "UserProjects",
         foreignKey: "project_id",
+        otherKey: "user_id",
+        as: "users",
       });
       Project.belongsToMany(models.Task, {
         through: "ProjectTasks",

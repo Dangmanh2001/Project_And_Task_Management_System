@@ -6,10 +6,14 @@ module.exports = (sequelize, DataTypes) => {
       Permission.belongsToMany(models.Role, {
         through: "RolePermissions",
         foreignKey: "permission_id",
+        otherKey: "role_id", // Khóa ngoại của user
+        onDelete: "CASCADE",
       });
       Permission.belongsToMany(models.User, {
-        through: "UserPermissions",
-        foreignKey: "permission_id",
+        through: "user_permissions", // Tên bảng trung gian
+        foreignKey: "permission_id", // Khóa ngoại của permission
+        otherKey: "user_id", // Khóa ngoại của user
+        onDelete: "CASCADE",
       });
     }
   }

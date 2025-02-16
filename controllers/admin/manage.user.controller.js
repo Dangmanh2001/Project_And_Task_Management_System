@@ -208,12 +208,6 @@ module.exports = {
   deleteUser: async (req, res) => {
     const { id } = req.params;
 
-    const project = await Project.findOne({ where: { created_by: id } });
-    console.log(project.id);
-    await Task.destroy({ where: { project_id: project.id } });
-    // Tiến hành xóa dự án
-    await Project.destroy({ where: { created_by: id } });
-
     // Xóa người dùng với id tương ứng
     const deletedUser = await User.destroy({
       where: { id },

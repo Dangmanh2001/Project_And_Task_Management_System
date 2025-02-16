@@ -1,0 +1,82 @@
+<div class="container-fluid">
+  <h1 class="mb-4">Thêm Công Việc Mới</h1>
+
+  <!-- Hiển thị thông báo lỗi và thành công -->
+  <% if (success.length > 0) { %>
+  <div class="alert alert-success">
+    <% success.forEach(message => { %>
+    <p><%= message %></p>
+    <% }) %>
+  </div>
+  <% } %> <% if (error.length > 0) { %>
+  <div class="alert alert-danger">
+    <% error.forEach(message => { %>
+    <p><%= message %></p>
+    <% }) %>
+  </div>
+  <% } %>
+
+  <!-- Form thêm công việc -->
+  <form action="/add-task" method="POST">
+    <!-- Tên công việc -->
+    <div class="mb-3">
+      <label for="name" class="form-label">Tên công việc</label>
+      <input type="text" class="form-control" id="name" name="name" required />
+    </div>
+
+    <!-- Mô tả công việc -->
+    <div class="mb-3">
+      <label for="description" class="form-label">Mô tả</label>
+      <textarea
+        class="form-control"
+        id="description"
+        name="description"
+        rows="3"
+        required
+      ></textarea>
+    </div>
+
+    <!-- Trạng thái công việc -->
+    <div class="mb-3">
+      <label for="status" class="form-label">Trạng thái</label>
+      <select class="form-select" id="status" name="status" required>
+        <option value="Hoàn thành">Hoàn thành</option>
+        <option value="Đang thực hiện">Đang thực hiện</option>
+        <option value="Chưa bắt đầu">Chưa bắt đầu</option>
+        <option value="Ngưng hoạt động">Ngưng hoạt động</option>
+      </select>
+    </div>
+
+    <!-- Ngày hết hạn -->
+    <div class="mb-3">
+      <label for="due_date" class="form-label">Ngày hết hạn</label>
+      <input type="date" class="form-control" id="due_date" name="due_date" />
+    </div>
+
+    <!-- Người giao công việc -->
+    <div class="mb-3">
+      <label for="assignee" class="form-label">Người giao</label>
+      <select class="form-select" id="assignee" name="assignee" required>
+        <% users.forEach(user => { %>
+        <option value="<%= user.id %>"><%= user.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Dự án -->
+    <div class="mb-3">
+      <label for="project_id" class="form-label">Dự án</label>
+      <select class="form-select" id="project_id" name="project_id" required>
+        <% projects.forEach(project => { %>
+        <option value="<%= project.id %>"><%= project.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Nút lưu công việc -->
+    <button type="submit" class="btn btn-success">Thêm công việc</button>
+  </form>
+
+  <!-- Quay lại trang danh sách công việc -->
+  <a href="/list-task" class="btn btn-secondary mt-3">Quay lại</a>
+</div>
