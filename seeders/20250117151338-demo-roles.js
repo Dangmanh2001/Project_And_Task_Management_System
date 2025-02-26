@@ -8,12 +8,6 @@ module.exports = {
         {
           name: "Admin",
         },
-        {
-          name: "Manager",
-        },
-        {
-          name: "Staff",
-        },
       ],
       {}
     );

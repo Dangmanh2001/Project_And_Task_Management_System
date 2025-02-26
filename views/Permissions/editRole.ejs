@@ -1,0 +1,101 @@
+<div class="container-fluid">
+  <h1>Thêm Vai trò Mới</h1>
+  <% if (success.length > 0) { %>
+  <div class="alert alert-success">
+    <% success.forEach(message => { %>
+    <p><%= message %></p>
+    <% }) %>
+  </div>
+  <% } %> <% if (error.length > 0) { %>
+  <div class="alert alert-danger">
+    <% error.forEach(message => { %>
+    <p><%= message %></p>
+    <% }) %>
+  </div>
+  <% } %>
+
+  <form action="/role/<%=id%>/edit" method="POST">
+    <!-- Tên Vai trò -->
+    <div class="mb-3">
+      <label for="name" class="form-label">Tên Vai trò</label>
+      <input
+        type="text"
+        class="form-control"
+        id="name"
+        name="name"
+        value="<%= roleData ? roleData.roleName : '' %>"
+        required
+      />
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <!-- Quyền đối với Quản lý User -->
+        <h3>Quyền đối với Quản lý User</h3>
+        <% ['user_view', 'user_create', 'user_edit',
+        'user_delete'].forEach(permission => { %>
+        <div class="mb-3 custom-control custom-switch">
+          <input type="checkbox" class="custom-control-input" id="<%= permission
+          %>" name="<%= permission %>" <%= roleData &&
+          roleData.permissions.includes(permission) ? 'checked' : '' %> />
+          <label class="custom-control-label" for="<%= permission %>">
+            <%= permission.replace('_', ' ').replace(/\b\w/g, l =>
+            l.toUpperCase()) %>
+          </label>
+        </div>
+        <% }) %>
+
+        <!-- Quyền đối với Quản lý Project -->
+        <h3>Quyền đối với Quản lý Project</h3>
+        <% ['project_view', 'project_create', 'project_edit',
+        'project_delete'].forEach(permission => { %>
+        <div class="mb-3 custom-control custom-switch">
+          <input type="checkbox" class="custom-control-input" id="<%= permission
+          %>" name="<%= permission %>" <%= roleData &&
+          roleData.permissions.includes(permission) ? 'checked' : '' %> />
+          <label class="custom-control-label" for="<%= permission %>">
+            <%= permission.replace('_', ' ').replace(/\b\w/g, l =>
+            l.toUpperCase()) %>
+          </label>
+        </div>
+        <% }) %>
+
+        <!-- Quyền đối với Quản lý Task -->
+        <h3>Quyền đối với Quản lý Task</h3>
+        <% ['task_view', 'task_create', 'task_edit',
+        'task_delete'].forEach(permission => { %>
+        <div class="mb-3 custom-control custom-switch">
+          <input type="checkbox" class="custom-control-input" id="<%= permission
+          %>" name="<%= permission %>" <%= roleData &&
+          roleData.permissions.includes(permission) ? 'checked' : '' %> />
+          <label class="custom-control-label" for="<%= permission %>">
+            <%= permission.replace('_', ' ').replace(/\b\w/g, l =>
+            l.toUpperCase()) %>
+          </label>
+        </div>
+        <% }) %>
+
+        <!-- Quyền đối với Quản lý Role -->
+        <h3>Quyền đối với Quản lý Vai trò</h3>
+        <% ['role_view', 'role_create', 'role_edit',
+        'role_delete'].forEach(permission => { %>
+        <div class="mb-3 custom-control custom-switch">
+          <input type="checkbox" class="custom-control-input" id="<%= permission
+          %>" name="<%= permission %>" <%= roleData &&
+          roleData.permissions.includes(permission) ? 'checked' : '' %> />
+          <label class="custom-control-label" for="<%= permission %>">
+            <%= permission.replace('_', ' ').replace(/\b\w/g, l =>
+            l.toUpperCase()) %>
+          </label>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Nút Submit -->
+    <button type="submit" class="btn btn-primary">Sửa Vai trò</button>
+  </form>
+
+  <br />
+  <a href="/roles" class="btn btn-secondary">Quay lại danh sách vai trò</a>
+</div>

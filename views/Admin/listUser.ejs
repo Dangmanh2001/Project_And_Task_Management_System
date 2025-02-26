@@ -40,8 +40,14 @@
         <td><%= index + 1 %></td>
         <td><%= user.name %></td>
         <td><%= user.email %></td>
-        <td><%= user.Role ? user.Role.name : 'Chưa có vai trò' %></td>
-        <!-- Hiển thị vai trò của người dùng -->
+        <td>
+          <% if (user.Roles && user.Roles.length > 0) { %> <%=
+          user.Roles.map(role => role.name) %>
+          <!-- Hiển thị tên vai trò -->
+          <% } else { %> Chưa có vai trò
+          <!-- Nếu không có vai trò -->
+          <% } %>
+        </td>
         <td>
           <!-- Nút Sửa với Icon -->
           <a href="/edit-user/<%= user.id %>" class="btn btn-primary btn-sm">
@@ -69,7 +75,6 @@
       <% }) %> <% } else { %>
       <tr>
         <td colspan="5" class="text-center">Không có người dùng nào!</td>
-        <!-- Sửa colspan cho đúng với số cột -->
       </tr>
       <% } %>
     </tbody>

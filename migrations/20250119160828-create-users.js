@@ -20,16 +20,6 @@ module.exports = {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
-      role_id: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: "Roles",
-          key: "id",
-        },
-        onDelete: "CASCADE",
-
-        allowNull: false,
-      },
       avatar: {
         type: Sequelize.STRING(255), // Chứa liên kết đến ảnh
         allowNull: true, // Nếu không bắt buộc thì để allowNull là true

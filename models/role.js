@@ -9,8 +9,11 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: "permission_id", // Khóa ngoại của user
         onDelete: "CASCADE",
       });
-      Role.hasMany(models.User, {
-        foreignKey: "role_id", // Khóa ngoại từ bảng User liên kết với bảng Role
+      Role.belongsToMany(models.User, {
+        through: "UserRoles",
+        foreignKey: "role_id",
+        otherKey: "user_id", // Khóa ngoại của user
+        onDelete: "CASCADE",
       });
     }
   }

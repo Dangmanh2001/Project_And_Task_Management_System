@@ -1,0 +1,210 @@
+<div class="container-fluid">
+  <h1>Thêm Vai trò Mới</h1>
+  <% if (success.length > 0) { %>
+  <div class="alert alert-success">
+    <% success.forEach(message => { %>
+    <p><%= message %></p>
+    <% }) %>
+  </div>
+  <% } %> <% if (error.length > 0) { %>
+  <div class="alert alert-danger">
+    <% error.forEach(message => { %>
+    <p><%= message %></p>
+    <% }) %>
+  </div>
+  <% } %>
+
+  <form action="/add-role" method="POST">
+    <!-- Tên Vai trò -->
+    <div class="mb-3">
+      <label for="name" class="form-label">Tên Vai trò</label>
+      <input type="text" class="form-control" id="name" name="name" required />
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <!-- Quyền đối với Quản lý User -->
+        <h3>Quyền đối với Quản lý User</h3>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="user_view"
+            name="user_view"
+          />
+          <label class="custom-control-label" for="user_view">Xem User</label>
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="user_create"
+            name="user_create"
+          />
+          <label class="custom-control-label" for="user_create"
+            >Thêm User</label
+          >
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="user_edit"
+            name="user_edit"
+          />
+          <label class="custom-control-label" for="user_edit">Sửa User</label>
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="user_delete"
+            name="user_delete"
+          />
+          <label class="custom-control-label" for="user_delete">Xóa User</label>
+        </div>
+
+        <!-- Quyền đối với Quản lý Project -->
+        <h3>Quyền đối với Quản lý Project</h3>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="project_view"
+            name="project_view"
+          />
+          <label class="custom-control-label" for="project_view"
+            >Xem Project</label
+          >
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="project_create"
+            name="project_create"
+          />
+          <label class="custom-control-label" for="project_create"
+            >Thêm Project</label
+          >
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="project_edit"
+            name="project_edit"
+          />
+          <label class="custom-control-label" for="project_edit"
+            >Sửa Project</label
+          >
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="project_delete"
+            name="project_delete"
+          />
+          <label class="custom-control-label" for="project_delete"
+            >Xóa Project</label
+          >
+        </div>
+
+        <!-- Quyền đối với Quản lý Task -->
+        <h3>Quyền đối với Quản lý Task</h3>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="task_view"
+            name="task_view"
+          />
+          <label class="custom-control-label" for="task_view">Xem Task</label>
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="task_create"
+            name="task_create"
+          />
+          <label class="custom-control-label" for="task_create"
+            >Thêm Task</label
+          >
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="task_edit"
+            name="task_edit"
+          />
+          <label class="custom-control-label" for="task_edit">Sửa Task</label>
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="task_delete"
+            name="task_delete"
+          />
+          <label class="custom-control-label" for="task_delete">Xóa Task</label>
+        </div>
+
+        <!-- Quyền đối với Quản lý Role -->
+        <h3>Quyền đối với Quản lý Vai trò</h3>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="role_view"
+            name="role_view"
+          />
+          <label class="custom-control-label" for="role_view"
+            >Xem Vai trò</label
+          >
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="role_create"
+            name="role_create"
+          />
+          <label class="custom-control-label" for="role_create"
+            >Thêm Vai trò</label
+          >
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="role_edit"
+            name="role_edit"
+          />
+          <label class="custom-control-label" for="role_edit"
+            >Sửa Vai trò</label
+          >
+        </div>
+        <div class="mb-3 custom-control custom-switch">
+          <input
+            type="checkbox"
+            class="custom-control-input"
+            id="role_delete"
+            name="role_delete"
+          />
+          <label class="custom-control-label" for="role_delete"
+            >Xóa Vai trò</label
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Nút Submit -->
+    <button type="submit" class="btn btn-primary">Thêm Vai trò</button>
+  </form>
+
+  <br />
+  <a href="/list-roles" class="btn btn-secondary">Quay lại danh sách vai trò</a>
+</div>

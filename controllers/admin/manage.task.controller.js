@@ -25,9 +25,18 @@ module.exports = {
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
 
     // Lấy tất cả công việc trong hệ thống
     const tasks = await Task.findAll({
@@ -55,6 +64,7 @@ module.exports = {
       error,
       user,
       tasks,
+      userPermissions,
       currentPage: page,
       totalPages: totalPages,
     });
@@ -74,17 +84,26 @@ module.exports = {
           model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
           required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
         },
-
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     res.render("Admin/addTask", {
       title: "Add Task",
       user,
       success,
+      userPermissions,
       error,
       users,
       projects,
@@ -134,13 +153,21 @@ module.exports = {
           model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
           required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
         },
-
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     const success = req.flash("success", "");
     const error = req.flash("error", "");
     const taskId = req.params.id;
@@ -172,6 +199,7 @@ module.exports = {
       user,
       success,
       error,
+      userPermissions,
       task, // Truyền thông tin công việc cần sửa
       users,
       projects,
@@ -223,13 +251,21 @@ module.exports = {
           model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
           required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
         },
-
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     const task = await Task.findByPk(id);
     if (!task) {
       req.flash("error", "Công việc không tồn tại!");
@@ -283,6 +319,7 @@ module.exports = {
       title: "Thêm người dùng cho công việc",
       success,
       error,
+      userPermissions,
       user,
       task,
       users,
@@ -338,13 +375,21 @@ module.exports = {
           model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
           required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
         },
-
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     const task = await Task.findByPk(id);
     if (!task) {
       req.flash("error", "Công việc không tồn tại!");
@@ -393,6 +438,7 @@ module.exports = {
       success,
       error,
       user,
+      userPermissions,
       task,
       users,
       currentPage: page,
@@ -448,11 +494,6 @@ module.exports = {
       return res.redirect("/list-task"); // Quay lại danh sách dự án nếu không tìm thấy
     }
 
-    // Kiểm tra quyền xóa (Chỉ Admin hoặc người tạo dự án mới có quyền xóa)
-    if (req.user.id !== task.created_by && req.user.role_id !== 1) {
-      req.flash("error", "Bạn không có quyền xóa công việc này!");
-      return res.redirect("/list-task");
-    }
     await task.removeUsers({ where: { task_id: id } });
     await Task.destroy({ where: { id } });
 

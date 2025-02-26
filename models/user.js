@@ -16,17 +16,14 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: "CASCADE",
         as: "users",
       });
-      User.belongsTo(models.Role, {
-        foreignKey: "role_id", // Khóa ngoại trong bảng User liên kết với bảng Role
+      User.belongsToMany(models.Role, {
+        through: "UserRoles",
+        foreignKey: "user_id", // Khóa ngoại trong bảng User liên kết với bảng Role
+        otherKey: "role_id", // Cột khóa ngoại của project
+        onDelete: "CASCADE",
       });
       User.hasMany(models.UserSocial, {
         foreignKey: "userId",
-      });
-      User.belongsToMany(models.Permission, {
-        through: "user_permissions", // Tên bảng trung gian
-        foreignKey: "user_id", // Khóa ngoại của user
-        otherKey: "permission_id", // Khóa ngoại của permission
-        onDelete: "CASCADE",
       });
 
       User.belongsToMany(models.Role, {
@@ -45,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
       name: DataTypes.STRING,
       email: DataTypes.STRING,
       password: DataTypes.STRING,
-      role_id: DataTypes.INTEGER,
+      avatar: DataTypes.STRING,
       createdAt: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

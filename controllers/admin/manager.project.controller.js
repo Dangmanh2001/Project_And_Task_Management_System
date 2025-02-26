@@ -27,10 +27,18 @@ module.exports = {
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
 
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     // Lấy tất cả dự án trong hệ thống
     const projects = await Project.findAll({
       include: [
@@ -59,6 +67,7 @@ module.exports = {
       error,
       user,
       projects,
+      userPermissions,
       currentPage: page,
       totalPages: totalPages,
     });
@@ -78,14 +87,23 @@ module.exports = {
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
 
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     // Render form thêm dự án
     res.render("Admin/addProject", {
       title: "Thêm Dự Án",
       success,
+      userPermissions,
       error,
       user, // Truyền danh sách người dùng vào view
     });
@@ -149,9 +167,18 @@ module.exports = {
           {
             model: Role, // Bao gồm thông tin từ bảng Role
             required: false, // Không bắt buộc phải có dữ liệu từ Role
+            include: {
+              model: Permission, // Bao gồm bảng Permission liên kết với Role
+              through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+            },
           },
         ],
       });
+
+      // Lấy tất cả các permission của user từ các roles mà user có
+      const userPermissions = user.Roles.flatMap((role) =>
+        role.Permissions.map((permission) => permission.name)
+      );
 
       const page = parseInt(req.query.page) || 1;
       const pageSize = 10; // Số lượng người dùng mỗi trang
@@ -203,6 +230,7 @@ module.exports = {
         success,
         error,
         users,
+        userPermissions,
         currentPage: page,
         totalPages: totalPages,
         user,
@@ -266,9 +294,18 @@ module.exports = {
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     const page = parseInt(req.query.page) || 1;
     const pageSize = 10; // Số lượng người dùng mỗi trang
     const offset = (page - 1) * pageSize;
@@ -312,6 +349,7 @@ module.exports = {
       success,
       error,
       users,
+      userPermissions,
       currentPage: page,
       totalPages: totalPages,
       user,
@@ -369,9 +407,18 @@ module.exports = {
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     const { id } = req.params; // Lấy ID dự án từ URL
 
     // Lấy tất cả người dùng để hiển thị trong dropdown "Người tạo"
@@ -399,6 +446,7 @@ module.exports = {
       success,
       error,
       user,
+      userPermissions,
       users, // Truyền danh sách người dùng để chọn người tạo
       project, // Truyền thông tin dự án cần sửa
     });
@@ -469,11 +517,6 @@ module.exports = {
       return res.redirect("/list-project"); // Quay lại danh sách dự án nếu không tìm thấy
     }
 
-    // Kiểm tra quyền xóa (Chỉ Admin hoặc người tạo dự án mới có quyền xóa)
-    if (req.user.id !== project.created_by && req.user.role_id !== 1) {
-      req.flash("error", "Bạn không có quyền xóa dự án này!");
-      return res.redirect("/list-project");
-    }
     await Task.destroy({ where: { project_id: id } });
     // Tiến hành xóa dự án
     await Project.destroy({ where: { id } });

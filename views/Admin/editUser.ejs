@@ -48,17 +48,6 @@
         >
       </div>
   
-      <!-- Vai trò -->
-      <div class="mb-3">
-        <label for="role" class="form-label">Vai trò</label>
-        <select class="form-select" id="role" name="role" required>
-          <% roles.forEach(role => { %>
-            <option value="<%= role.id %>" <%= userE.Role && userE.Role.id === role.id ? 'selected' : '' %> >
-              <%= role.name %>
-            </option>
-          <% }) %>
-        </select>
-      </div>
   
       <!-- Mật khẩu mới -->
       <div class="mb-3">

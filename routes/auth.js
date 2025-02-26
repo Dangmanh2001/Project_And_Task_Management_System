@@ -36,14 +36,14 @@ router.get(
 );
 
 router.get(
-  "/register",
-  authMiddleware.isAuthenticated,
-  authController.register
-);
-router.get(
   "/forgotPass",
   authMiddleware.isAuthenticated,
   authController.forgotPass
+);
+router.post(
+  "/forgotPass",
+  authMiddleware.isAuthenticated,
+  authController.handleForgotPass
 );
 router.get("/logout", authController.logout); // Route để xử lý logout
 

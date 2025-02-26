@@ -3,9 +3,6 @@
 module.exports = {
   isAuthenticated: (req, res, next) => {
     if (req.isAuthenticated()) {
-      if(req.session.verify==="done"){
-        return res.redirect("/profile")
-      }
       // Nếu đã đăng nhập, chuyển hướng về trang chủ hoặc trang khác
       return res.redirect("/");
     }
@@ -15,9 +12,6 @@ module.exports = {
 
   isLoggedIn: (req, res, next) => {
     if (!req.isAuthenticated()) {
-      if(req.session.verify==="done"){
-        return res.redirect("/profile")
-      }
       // Nếu chưa đăng nhập, chuyển hướng tới login
       return res.redirect("/auth/login");
     }

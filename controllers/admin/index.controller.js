@@ -5,9 +5,9 @@ const Role = model.Role;
 const bcrypt = require("bcrypt");
 const Project = model.Project;
 const Task = model.Task;
+const Permission = model.Permission;
 const fs = require("fs");
 const path = require("path");
-const { Op, Sequelize, where } = require("sequelize");
 
 module.exports = {
   index: async (req, res) => {
@@ -23,9 +23,21 @@ module.exports = {
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
+
+    // Log tên của roles
+
     const totalProjects = await Project.count();
 
     // Lấy số lượng project có status "Hoàn thành"
@@ -88,6 +100,7 @@ module.exports = {
       notStartedPercentage,
       inactivePercentage,
       inProgressPercentage,
+      userPermissions,
       message,
       success,
     });
@@ -102,15 +115,28 @@ module.exports = {
           model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
           required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
         },
-
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
 
-    res.render("profile", { title: "Profile", user, messages, success });
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
+    res.render("profile", {
+      title: "Profile",
+      user,
+      messages,
+      success,
+      userPermissions,
+    });
   },
   updateAvatar: async (req, res) => {
     try {
@@ -133,9 +159,8 @@ module.exports = {
 
       // Lấy đường dẫn ảnh đã tải lên
       const avatarPath = "/images/" + req.file.filename; // Đường dẫn tới ảnh đã được tải lên
-
       // Cập nhật đường dẫn ảnh vào cơ sở dữ liệu
-      await User.update(
+      const updateU = await User.update(
         { avatar: avatarPath },
         { where: { id: req.user.id } } // Giả sử req.user.id có sẵn từ middleware xác thực
       );
@@ -148,22 +173,97 @@ module.exports = {
       res.redirect("/profile");
     }
   },
+  activity: async (req, res) => {
+    const success = req.flash("success");
+    const error = req.flash("error");
+    const user = await User.findOne({
+      where: { id: req.user.id }, // Lọc theo id của người dùng
+      include: [
+        {
+          model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
+          required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
+        },
+        {
+          model: Role, // Bao gồm thông tin từ bảng Role
+          required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
+        },
+      ],
+    });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
+    res.render("Admin/activity", {
+      title: "Activity Log",
+      user,
+      userPermissions,
+      success,
+      error,
+    });
+  },
+  message: async (req, res) => {
+    const success = req.flash("success");
+    const error = req.flash("error");
+    const user = await User.findOne({
+      where: { id: req.user.id }, // Lọc theo id của người dùng
+      include: [
+        {
+          model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
+          required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
+        },
+        {
+          model: Role, // Bao gồm thông tin từ bảng Role
+          required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
+        },
+      ],
+    });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
+    res.render("Admin/message", {
+      title: "Message",
+      user,
+      userPermissions,
+      success,
+      error,
+    });
+  },
   chart: async (req, res) => {
     try {
       // Lấy thông tin người dùng
       const user = await User.findOne({
-        where: { id: req.user.id },
+        where: { id: req.user.id }, // Lọc theo id của người dùng
         include: [
           {
-            model: UserSocial,
-            required: false,
+            model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
+            required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
           },
           {
-            model: Role,
-            required: false,
+            model: Role, // Bao gồm thông tin từ bảng Role
+            required: false, // Không bắt buộc phải có dữ liệu từ Role
+            include: {
+              model: Permission, // Bao gồm bảng Permission liên kết với Role
+              through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+            },
           },
         ],
       });
+
+      // Lấy tất cả các permission của user từ các roles mà user có
+      const userPermissions = user.Roles.flatMap((role) =>
+        role.Permissions.map((permission) => permission.name)
+      );
 
       // Lấy tổng số người dùng
       const totalUsers = await User.count();
@@ -214,6 +314,7 @@ module.exports = {
         totalUsers,
         totalProjects,
         totalTasks,
+        userPermissions,
       });
     } catch (error) {
       console.error(error);
@@ -230,13 +331,21 @@ module.exports = {
           model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
           required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
         },
-
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     const projects = await Project.findAll({
       include: [
         {
@@ -253,7 +362,6 @@ module.exports = {
         },
       ],
     });
-    console.log(projects);
     const events = projects.map((project) => ({
       title: project.name,
       start: project.start_date,
@@ -263,6 +371,7 @@ module.exports = {
     res.render("tablesP", {
       title: "Tables Project",
       user,
+      userPermissions,
       events: JSON.stringify(events),
     });
   },
@@ -275,13 +384,21 @@ module.exports = {
           model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
           required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
         },
-
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     const tasks = await Task.findAll({
       include: [
         {
@@ -298,7 +415,6 @@ module.exports = {
         },
       ],
     });
-    console.log(tasks);
 
     // Lấy ngày hôm nay
     const today = new Date().toISOString().split("T")[0]; // Format ngày thành YYYY-MM-DD
@@ -310,33 +426,14 @@ module.exports = {
       end: task.due_date, // end là due_date của task
     }));
 
-    console.log(events);
-
     res.render("tablesT", {
       title: "Tables Task",
       user,
+      userPermissions,
       events: JSON.stringify(events),
     });
   },
 
-  setting: async (req, res) => {
-    const user = await User.findOne({
-      where: { id: req.user.id }, // Lọc theo id của người dùng
-      include: [
-        {
-          model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
-          required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
-        },
-
-        {
-          model: Role, // Bao gồm thông tin từ bảng Role
-          required: false, // Không bắt buộc phải có dữ liệu từ Role
-        },
-      ],
-    });
-
-    res.render("settings", { title: "Setting", user });
-  },
   unlinkGoogle: async (req, res) => {
     const user = req.user;
     await UserSocial.destroy({
@@ -384,5 +481,88 @@ module.exports = {
       req.flash("error", "Mật khẩu sai");
       return res.redirect("/profile");
     }
+  },
+  assignRole: async (req, res) => {
+    const id = req.params.id;
+    const error = req.flash("error");
+    const success = req.flash("success");
+
+    // Lấy thông tin của người dùng hiện tại
+    const user = await User.findOne({
+      where: { id: req.user.id }, // Lọc theo id của người dùng
+      include: [
+        {
+          model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
+          required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
+        },
+        {
+          model: Role, // Bao gồm thông tin từ bảng Role
+          required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
+        },
+      ],
+    });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
+    // Lấy tất cả các roles
+    const roles = await Role.findAll();
+
+    // Lấy thông tin của user
+    const userRole = await User.findOne({
+      where: { id: req.params.id }, // Hoặc `id` từ `req.params.id` nếu là chỉnh sửa
+      include: [
+        {
+          model: Role, // Lấy vai trò của người dùng
+          required: false,
+        },
+      ],
+    });
+
+    // Truyền dữ liệu vào EJS
+    res.render("Admin/assignRole", {
+      title: "Decentralization",
+      error,
+      success,
+      user,
+      id,
+      userPermissions,
+      roles, // Tất cả các roles
+      userRole, // Roles của user có id = req.params.id
+    });
+  },
+  handleAssignRole: async (req, res) => {
+    const { id } = req.params; // Lấy id của user từ params
+    const { role_name } = req.body; // Lấy role mới từ form
+
+    // Lấy thông tin user theo id
+    const user = await User.findOne({
+      where: { id },
+      include: [
+        {
+          model: Role, // Lấy thông tin các role liên kết
+          through: { attributes: [] }, // Bỏ qua bảng trung gian
+        },
+      ],
+    });
+
+    // Xóa hết tất cả các role của user
+    await user.setRoles([]); // Xóa hết các role hiện tại liên kết với user
+
+    // Nếu có role mới được chọn, thêm role đó vào user
+    if (role_name) {
+      const role = await Role.findByPk(role_name);
+      if (role) {
+        await user.addRole(role); // Thêm role mới vào user
+      }
+    }
+
+    req.flash("success", "Cập nhật vai trò người dùng thành công!");
+    res.redirect(`/assign-role/${id}`);
   },
 };

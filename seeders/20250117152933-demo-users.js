@@ -10,7 +10,6 @@ module.exports = {
         name: `User ${i + 1}`,
         email: `user${i + 1}@example.com`,
         password: password,
-        role_id: 1, // Giả sử bạn có một role_id mặc định, ví dụ là 1
       });
     }
     await queryInterface.bulkInsert("users", users, {});

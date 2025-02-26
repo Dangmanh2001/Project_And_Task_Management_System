@@ -4,6 +4,7 @@ const UserSocial = model.UserSocial;
 const Role = model.Role;
 const Project = model.Project;
 const Task = model.Task;
+const Permission = model.Permission;
 const bcrypt = require("bcrypt");
 const { Op } = require("sequelize");
 
@@ -20,15 +21,21 @@ module.exports = {
       where: { id: req.user.id }, // Lọc theo id của người dùng
       include: [
         {
-          model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
-          required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
-        },
-        {
           model: Role, // Bao gồm thông tin từ bảng Role
-          required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm Permissions từ Role
+            through: { attributes: [] }, // Bỏ qua bảng trung gian
+          },
         },
       ],
     });
+
+    // Lấy tất cả quyền của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
+
+    console.log(userPermissions); // In ra tất cả các permission của user
 
     // Lấy tất cả người dùng trong hệ thống
     const users = await User.findAll({
@@ -40,6 +47,8 @@ module.exports = {
       offset: offset,
     });
 
+    console.log(users);
+
     // Tổng số người dùng để tính toán phân trang
     const totalUsers = await User.count();
     const totalPages = Math.ceil(totalUsers / pageSize);
@@ -49,6 +58,7 @@ module.exports = {
       success,
       error,
       users,
+      userPermissions,
       currentPage: page,
       totalPages: totalPages,
     });
@@ -65,16 +75,25 @@ module.exports = {
           model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
           required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
         },
-
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
+
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
     res.render("Admin/addUser", {
       title: "Add User",
       user,
+      userPermissions,
       error,
       success,
       roles,
@@ -141,17 +160,26 @@ module.exports = {
           model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
           required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
         },
-
         {
           model: Role, // Bao gồm thông tin từ bảng Role
           required: false, // Không bắt buộc phải có dữ liệu từ Role
+          include: {
+            model: Permission, // Bao gồm bảng Permission liên kết với Role
+            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
+          },
         },
       ],
     });
 
+    // Lấy tất cả các permission của user từ các roles mà user có
+    const userPermissions = user.Roles.flatMap((role) =>
+      role.Permissions.map((permission) => permission.name)
+    );
+
     res.render("Admin/editUser", {
       title: "Edit User",
       user,
+      userPermissions,
       userE,
       id,
       roles,
@@ -161,10 +189,11 @@ module.exports = {
   },
   updateUser: async (req, res) => {
     const { id } = req.params;
-    const { name, email, role, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
+    const user = await User.findByPk(id);
 
     // Kiểm tra sự tồn tại của các trường bắt buộc
-    if (!name || !email || !role) {
+    if (!name || !email) {
       req.flash(
         "error",
         "Tất cả các trường bắt buộc phải có, ngoại trừ mật khẩu!"
@@ -194,10 +223,9 @@ module.exports = {
       // Cập nhật mật khẩu
       await User.update({ password: hashedPassword }, { where: { id } });
     }
-
     // Cập nhật các trường còn lại (trừ mật khẩu)
     await User.update(
-      { name, email, roleId: role }, // Cập nhật tên, email, và vai trò
+      { name, email }, // Cập nhật tên, email, và vai trò
       { where: { id } }
     );
 
