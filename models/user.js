@@ -25,11 +25,6 @@ module.exports = (sequelize, DataTypes) => {
       User.hasMany(models.UserSocial, {
         foreignKey: "userId",
       });
-
-      User.belongsToMany(models.Role, {
-        through: "UserRoles",
-        foreignKey: "user_id",
-      });
     }
   }
   User.init(

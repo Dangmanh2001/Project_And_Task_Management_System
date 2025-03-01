@@ -5,6 +5,7 @@ const Role = model.Role;
 const Project = model.Project;
 const Task = model.Task;
 const Permission = model.Permission;
+const ActivityLog = model.ActivityLog;
 const { Op } = require("sequelize");
 
 module.exports = {
@@ -14,6 +15,9 @@ module.exports = {
     const page = parseInt(req.query.page) || 1; // Lấy số trang từ query params, mặc định là 1
     const pageSize = 10; // Số lượng vai trò mỗi trang
     const offset = (page - 1) * pageSize; // Tính toán offset
+
+    // Lấy từ khóa tìm kiếm từ query
+    const searchQuery = req.query.search || ""; // Tìm kiếm theo tên Role
 
     const user = await User.findOne({
       where: { id: req.user.id }, // Lọc theo id của người dùng
@@ -37,17 +41,30 @@ module.exports = {
     const userPermissions = user.Roles.flatMap((role) =>
       role.Permissions.map((permission) => permission.name)
     );
+
+    // Lấy tất cả các vai trò với điều kiện tìm kiếm theo tên
     const roles = await Role.findAll({
+      where: {
+        name: {
+          [Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên Role
+        },
+      },
       include: [
-        { model: Permission, required: false },
-        { model: User, required: false },
+        { model: Permission, required: false }, // Bao gồm thông tin từ bảng Permission
+        { model: User, required: false }, // Bao gồm thông tin từ bảng User
       ],
       limit: pageSize,
       offset: offset,
     });
 
-    // Tổng số người dùng để tính toán phân trang
-    const totalRoles = await Role.count();
+    // Tổng số vai trò để tính toán phân trang
+    const totalRoles = await Role.count({
+      where: {
+        name: {
+          [Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên Role
+        },
+      },
+    });
     const totalPages = Math.ceil(totalRoles / pageSize);
 
     res.render("Permissions/listRole", {
@@ -59,6 +76,7 @@ module.exports = {
       userPermissions,
       currentPage: page,
       totalPages: totalPages,
+      searchQuery, // Gửi từ khóa tìm kiếm vào view
     });
   },
   addRole: async (req, res) => {
@@ -140,7 +158,11 @@ module.exports = {
         }
       }
     }
-
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: `Bạn đã thêm một vai trò`,
+      timestamp: new Date().toLocaleString(),
+    });
     req.flash("success", "Thêm vai trò thành công!");
     res.redirect("/add-role");
   },
@@ -262,7 +284,11 @@ module.exports = {
         }
       }
     }
-
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: `Bạn đã thay đổi vai trò ${roles.name}`,
+      timestamp: new Date().toLocaleString(),
+    });
     req.flash("success", "Sửa vai trò thành công!");
     res.redirect(`/role/${id}/edit`);
   },
@@ -271,6 +297,7 @@ module.exports = {
 
     // Kiểm tra xem Role có tồn tại không
     const role = await Role.findOne({ where: { id } });
+    const roleName = role.name;
     if (!role) {
       req.flash("error", "Vai trò không tồn tại!");
       return res.redirect("/roles");
@@ -283,7 +310,11 @@ module.exports = {
 
     // Xóa Role
     await role.destroy();
-
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: `Bạn đã xóa vai trò ${roleName}`,
+      timestamp: new Date().toLocaleString(),
+    });
     req.flash("success", "Đã xóa vai trò thành công!");
     res.redirect("/list-roles");
   },

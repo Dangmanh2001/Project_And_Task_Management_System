@@ -3,13 +3,17 @@ const User = model.User;
 const UserSocial = model.UserSocial;
 const Project = model.Project;
 const Task = model.Task;
+const Permission = model.Permission;
 const Role = model.Role;
+const ActivityLog = model.ActivityLog;
+
 const { Op, Sequelize } = require("sequelize");
 
 module.exports = {
   listTask: async (req, res) => {
     const success = req.flash("success", "");
     const error = req.flash("error", "");
+    const searchQuery = req.query.search || ""; // Lấy từ khóa tìm kiếm từ query (nếu có)
 
     const page = parseInt(req.query.page) || 1; // Lấy số trang từ query params, mặc định là 1
     const pageSize = 10; // Số lượng công việc mỗi trang
@@ -38,24 +42,114 @@ module.exports = {
       role.Permissions.map((permission) => permission.name)
     );
 
-    // Lấy tất cả công việc trong hệ thống
     const tasks = await Task.findAll({
       include: [
         {
           model: Project,
-          required: false,
+          required: false, // Nếu bạn muốn các task không cần phải có project liên kết
         },
         {
           model: User,
           required: false,
+          as: "users",
         },
       ],
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            name: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên công việc (task)
+            },
+          },
+          {
+            description: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo mô tả công việc
+            },
+          },
+        ],
+      },
       limit: pageSize,
       offset: offset,
     });
 
+    const tasksUser = await Task.findAll({
+      include: [
+        {
+          model: Project,
+          required: false, // Nếu bạn muốn các task không cần phải có project liên kết
+        },
+        {
+          model: User,
+          required: true, // Chỉ lấy task mà người dùng hiện tại tham gia
+          as: "users", // Đảm bảo rằng alias là "users" trong mối quan hệ
+          where: {
+            id: req.user.id, // Lọc chỉ lấy các tasks mà user hiện tại có user_id là req.user.id
+          },
+        },
+      ],
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            name: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên công việc (task)
+            },
+          },
+          {
+            description: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo mô tả công việc
+            },
+          },
+        ],
+      },
+      limit: pageSize,
+      offset: offset,
+    });
+
+    const totalTasksUser = await Task.count({
+      include: [
+        {
+          model: User,
+          required: true,
+          as: "users",
+          where: {
+            id: req.user.id, // Lọc tổng số công việc mà người dùng tham gia
+          },
+        },
+      ],
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            name: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên công việc (task)
+            },
+          },
+          {
+            description: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo mô tả công việc
+            },
+          },
+        ],
+      },
+    });
+
+    const totalPagesUser = Math.ceil(totalTasksUser / pageSize);
     // Tổng số công việc để tính toán phân trang
-    const totalTasks = await Task.count();
+    const totalTasks = await Task.count({
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            name: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên công việc (task)
+            },
+          },
+          {
+            description: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo mô tả công việc
+            },
+          },
+        ],
+      },
+    });
     const totalPages = Math.ceil(totalTasks / pageSize);
 
     res.render("Admin/listTask", {
@@ -64,7 +158,10 @@ module.exports = {
       error,
       user,
       tasks,
+      tasksUser,
+      searchQuery,
       userPermissions,
+      totalPagesUser: totalPagesUser,
       currentPage: page,
       totalPages: totalPages,
     });
@@ -128,6 +225,12 @@ module.exports = {
         assignee,
         project_id,
       });
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: `Bạn đã thêm một công việc mới là ${name}`,
+        timestamp: new Date().toLocaleString(),
+      });
+
       req.flash("success", "Công việc đã được thêm thành công!");
       return res.redirect("/add-task"); // Chuyển hướng về danh sách công việc
     }
@@ -140,7 +243,11 @@ module.exports = {
       assignee,
       project_id, // Gán dự án cho công việc
     });
-
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: `Bạn đã thêm một công việc mới là ${name}`,
+      timestamp: new Date().toLocaleString(),
+    });
     req.flash("success", "Công việc đã được thêm thành công!");
     res.redirect("/add-task"); // Chuyển hướng về danh sách công việc
   },
@@ -222,6 +329,11 @@ module.exports = {
         { name, description, status, due_date: null, assignee, project_id },
         { where: { id: taskId } }
       );
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: `Bạn đã cập nhật công việc ${name}`,
+        timestamp: new Date().toLocaleString(),
+      });
       req.flash("success", "Công việc đã được cập nhật thành công!");
       return res.redirect(`/edit-task/${taskId}`); // Quay lại danh sách công việc sau khi cập nhật
     }
@@ -236,7 +348,11 @@ module.exports = {
       req.flash("error", "Không tìm thấy công việc để cập nhật!");
       return res.redirect(`/edit-task/${taskId}`);
     }
-
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: `Bạn đã cập nhật công việc ${name}`,
+      timestamp: new Date().toLocaleString(),
+    });
     req.flash("success", "Công việc đã được cập nhật thành công!");
     res.redirect(`/edit-task/${taskId}`); // Quay lại danh sách công việc sau khi cập nhật
   },
@@ -298,6 +414,7 @@ module.exports = {
         {
           model: Project,
           required: false, // Không yêu cầu phải có dự án
+          as: "projects",
         },
       ],
     });
@@ -355,7 +472,11 @@ module.exports = {
         // Nếu chỉ có một giá trị trong user_id, thêm người dùng đó vào dự án
         await task.addUser(user_id); // Đảm bảo `addUser` đã được định nghĩa trong Sequelize association
       }
-
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: `Bạn đã thêm người dùng cho công việc ${task.name}`,
+        timestamp: new Date().toLocaleString(),
+      });
       req.flash("success", "Người dùng đã được thêm vào công việc!");
       res.redirect(`/add-user-to-task/${id}`);
     } catch (error) {
@@ -407,7 +528,8 @@ module.exports = {
           model: Task,
           where: { id: task.id }, // Lọc người dùng tham gia vào dự án cụ thể
           through: { attributes: [] }, // Không cần lấy thông tin từ bảng trung gian
-          required: true, // Chỉ lấy những người dùng có liên kết với dự án
+          required: false, // Chỉ lấy những người dùng có liên kết với dự án
+          as: "users",
         },
         {
           model: UserSocial,
@@ -428,6 +550,7 @@ module.exports = {
           where: { id: task.id },
           through: { attributes: [] },
           required: true,
+          as: "users",
         },
       ],
     });
@@ -473,7 +596,11 @@ module.exports = {
         // Nếu chỉ có một người dùng, xóa người đó khỏi dự án
         await task.removeUser(user_id); // Đảm bảo `removeUser` đã được định nghĩa trong Sequelize association
       }
-
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: `Bạn đã xóa người dùng cho công việc ${task.name}`,
+        timestamp: new Date().toLocaleString(),
+      });
       req.flash("success", "Người dùng đã được xóa khỏi công việc!");
       // Redirect về trang xóa người dùng khỏi dự án có kèm id
       res.redirect(`/remove-user-from-task/${id}`);
@@ -496,7 +623,11 @@ module.exports = {
 
     await task.removeUsers({ where: { task_id: id } });
     await Task.destroy({ where: { id } });
-
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: `Bạn đã xóa công việc ${task.name}`,
+      timestamp: new Date().toLocaleString(),
+    });
     req.flash("success", "Công việc đã được xóa thành công!");
     res.redirect("/list-task"); // Quay lại trang danh sách dự án
   },

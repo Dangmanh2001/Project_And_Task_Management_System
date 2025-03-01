@@ -6,6 +6,8 @@ const bcrypt = require("bcrypt");
 const Project = model.Project;
 const Task = model.Task;
 const Permission = model.Permission;
+const ActivityLog = model.ActivityLog;
+const { Sequelize } = require("sequelize");
 const fs = require("fs");
 const path = require("path");
 
@@ -164,6 +166,11 @@ module.exports = {
         { avatar: avatarPath },
         { where: { id: req.user.id } } // Giả sử req.user.id có sẵn từ middleware xác thực
       );
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: "Bạn đã thay đổi avatar",
+        timestamp: new Date().toLocaleString(),
+      });
       req.flash("success", "Thay đổi avatar thành công");
       // Quay lại trang profile sau khi cập nhật ảnh
       res.redirect("/profile");
@@ -176,16 +183,19 @@ module.exports = {
   activity: async (req, res) => {
     const success = req.flash("success");
     const error = req.flash("error");
+    const searchQuery = req.query.search || ""; // Lấy từ khóa tìm kiếm từ query (nếu có)
+
+    // Lấy người dùng
     const user = await User.findOne({
       where: { id: req.user.id }, // Lọc theo id của người dùng
       include: [
         {
           model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
-          required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
+          required: false,
         },
         {
           model: Role, // Bao gồm thông tin từ bảng Role
-          required: false, // Không bắt buộc phải có dữ liệu từ Role
+          required: false,
           include: {
             model: Permission, // Bao gồm bảng Permission liên kết với Role
             through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
@@ -198,46 +208,50 @@ module.exports = {
     const userPermissions = user.Roles.flatMap((role) =>
       role.Permissions.map((permission) => permission.name)
     );
+
+    // Điều kiện lọc hoạt động theo user_id và từ khóa tìm kiếm trong trường action
+    const activities = await ActivityLog.findAll({
+      where: {
+        user_id: req.user.id, // Lọc theo user_id
+        action: {
+          [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm trong trường action
+        },
+      },
+      order: [["timestamp", "DESC"]], // Sắp xếp theo thời gian giảm dần
+    });
+
+    // Render lại trang với các dữ liệu đã tìm kiếm
     res.render("Admin/activity", {
       title: "Activity Log",
       user,
       userPermissions,
       success,
+      activities,
       error,
+      searchQuery, // Gửi lại từ khóa tìm kiếm để hiển thị trên thanh tìm kiếm
     });
   },
-  message: async (req, res) => {
-    const success = req.flash("success");
-    const error = req.flash("error");
-    const user = await User.findOne({
-      where: { id: req.user.id }, // Lọc theo id của người dùng
-      include: [
-        {
-          model: UserSocial, // Bao gồm thông tin từ bảng UserSocial
-          required: false, // Không bắt buộc phải có dữ liệu từ UserSocial
-        },
-        {
-          model: Role, // Bao gồm thông tin từ bảng Role
-          required: false, // Không bắt buộc phải có dữ liệu từ Role
-          include: {
-            model: Permission, // Bao gồm bảng Permission liên kết với Role
-            through: { attributes: [] }, // Không lấy thông tin từ bảng trung gian, chỉ lấy quyền
-          },
-        },
-      ],
+  deleteActivityAll: async (req, res) => {
+    const id = req.user.id;
+    req.flash("success", "Xóa nhật kí hoạt động thành công!");
+    await ActivityLog.destroy({
+      where: {
+        user_id: id,
+      },
     });
+    res.redirect("/activity");
+  },
+  deleteActivityId: async (req, res) => {
+    const { id } = req.params;
+    req.flash("success", "Xóa nhật kí hoạt động thành công!");
 
-    // Lấy tất cả các permission của user từ các roles mà user có
-    const userPermissions = user.Roles.flatMap((role) =>
-      role.Permissions.map((permission) => permission.name)
-    );
-    res.render("Admin/message", {
-      title: "Message",
-      user,
-      userPermissions,
-      success,
-      error,
+    await ActivityLog.destroy({
+      where: {
+        id: id,
+        user_id: req.user.id,
+      },
     });
+    res.redirect("/activity");
   },
   chart: async (req, res) => {
     try {
@@ -346,11 +360,17 @@ module.exports = {
     const userPermissions = user.Roles.flatMap((role) =>
       role.Permissions.map((permission) => permission.name)
     );
+    const projectsAdmin = await Project.findAll();
+    const eventsAdmin = projectsAdmin.map((project) => ({
+      title: project.name,
+      start: project.start_date,
+      end: project.end_date,
+    }));
     const projects = await Project.findAll({
       include: [
         {
           model: User,
-          as: "users", // Alias cho mối quan hệ nhiều-nhiều giữa User và Project
+          as: "projects", // Alias cho mối quan hệ nhiều-nhiều giữa User và Project
           through: {
             attributes: [], // Không lấy thông tin từ bảng trung gian
           },
@@ -367,10 +387,11 @@ module.exports = {
       start: project.start_date,
       end: project.end_date,
     }));
-
+    console.log(projects);
     res.render("tablesP", {
       title: "Tables Project",
       user,
+      eventsAdmin: JSON.stringify(eventsAdmin),
       userPermissions,
       events: JSON.stringify(events),
     });
@@ -416,6 +437,8 @@ module.exports = {
       ],
     });
 
+    const tasksAdmin = await Task.findAll();
+
     // Lấy ngày hôm nay
     const today = new Date().toISOString().split("T")[0]; // Format ngày thành YYYY-MM-DD
 
@@ -425,17 +448,28 @@ module.exports = {
       start: today, // start là ngày hôm nay
       end: task.due_date, // end là due_date của task
     }));
-
+    const eventsAdmin = tasksAdmin.map((task) => ({
+      title: task.name,
+      start: today, // start là ngày hôm nay
+      end: task.due_date, // end là due_date của task
+    }));
     res.render("tablesT", {
       title: "Tables Task",
       user,
       userPermissions,
+      eventsAdmin: JSON.stringify(eventsAdmin),
+
       events: JSON.stringify(events),
     });
   },
 
   unlinkGoogle: async (req, res) => {
     const user = req.user;
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: "Bạn đã hủy liên kết Google",
+      timestamp: new Date().toLocaleString(),
+    });
     await UserSocial.destroy({
       where: {
         userId: user.id,
@@ -446,6 +480,11 @@ module.exports = {
   },
   unlinkFacebook: async (req, res) => {
     const user = req.user;
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: "Bạn đã hủy liên kết Facebook",
+      timestamp: new Date().toLocaleString(),
+    });
     await UserSocial.destroy({
       where: {
         userId: user.id,
@@ -476,6 +515,12 @@ module.exports = {
           }
         );
       });
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: "Bạn đã thay đổi mật khẩu",
+        timestamp: new Date().toLocaleString(),
+      });
+      req.flash("success", "Thay đổi mật khẩu thành công");
       return res.redirect("/profile");
     } else {
       req.flash("error", "Mật khẩu sai");
@@ -561,7 +606,11 @@ module.exports = {
         await user.addRole(role); // Thêm role mới vào user
       }
     }
-
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: `Bạn đã cập nhật vai trò của ${user.name}`,
+      timestamp: new Date().toLocaleString(),
+    });
     req.flash("success", "Cập nhật vai trò người dùng thành công!");
     res.redirect(`/assign-role/${id}`);
   },

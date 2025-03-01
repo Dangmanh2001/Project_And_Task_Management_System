@@ -5,6 +5,7 @@ const Role = model.Role;
 const Project = model.Project;
 const Task = model.Task;
 const Permission = model.Permission;
+const ActivityLog = model.ActivityLog;
 const bcrypt = require("bcrypt");
 const { Op } = require("sequelize");
 
@@ -12,6 +13,8 @@ module.exports = {
   listUser: async (req, res) => {
     const success = req.flash("success", "");
     const error = req.flash("error", "");
+
+    const searchQuery = req.query.search || ""; // Lấy từ khóa tìm kiếm từ query (nếu có)
 
     const page = parseInt(req.query.page) || 1; // Lấy số trang từ query params, mặc định là 1
     const pageSize = 10; // Số lượng người dùng mỗi trang
@@ -35,22 +38,47 @@ module.exports = {
       role.Permissions.map((permission) => permission.name)
     );
 
-    console.log(userPermissions); // In ra tất cả các permission của user
-
     // Lấy tất cả người dùng trong hệ thống
     const users = await User.findAll({
       include: [
         { model: UserSocial, required: false },
         { model: Role, required: false },
       ],
+      where: {
+        [Op.or]: [
+          {
+            name: {
+              [Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên người dùng
+            },
+          },
+          {
+            email: {
+              [Op.like]: `%${searchQuery}%`, // Tìm kiếm theo email người dùng
+            },
+          },
+        ],
+      },
       limit: pageSize,
       offset: offset,
     });
 
-    console.log(users);
-
     // Tổng số người dùng để tính toán phân trang
-    const totalUsers = await User.count();
+    const totalUsers = await User.count({
+      where: {
+        [Op.or]: [
+          {
+            name: {
+              [Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên người dùng
+            },
+          },
+          {
+            email: {
+              [Op.like]: `%${searchQuery}%`, // Tìm kiếm theo email người dùng
+            },
+          },
+        ],
+      },
+    });
     const totalPages = Math.ceil(totalUsers / pageSize);
     res.render("Admin/listUser", {
       title: "List User",
@@ -58,6 +86,7 @@ module.exports = {
       success,
       error,
       users,
+      searchQuery,
       userPermissions,
       currentPage: page,
       totalPages: totalPages,
@@ -129,7 +158,11 @@ module.exports = {
       password: hashedPassword,
       role_id: role,
     });
-
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: `Bạn đã thêm người dùng ${name}`,
+      timestamp: new Date().toLocaleString(),
+    });
     req.flash("success", "Người dùng đã được thêm thành công!");
     res.redirect("/add-user");
   },
@@ -228,13 +261,19 @@ module.exports = {
       { name, email }, // Cập nhật tên, email, và vai trò
       { where: { id } }
     );
-
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: `Bạn đã thay đổi thông tin người dùng ${name}`,
+      timestamp: new Date().toLocaleString(),
+    });
     req.flash("success", "Thông tin người dùng đã được cập nhật!");
     res.redirect(`/edit-user/${id}`);
   },
 
   deleteUser: async (req, res) => {
     const { id } = req.params;
+    const userDelete = await User.findByPk(id);
+    const userNameDelete = userDelete.name;
 
     // Xóa người dùng với id tương ứng
     const deletedUser = await User.destroy({
@@ -242,6 +281,11 @@ module.exports = {
     });
 
     if (deletedUser) {
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: `Bạn đã xóa người dùng ${userNameDelete}`,
+        timestamp: new Date().toLocaleString(),
+      });
       req.flash("success", "Người dùng đã được xóa thành công!");
     } else {
       req.flash("error", "Không tìm thấy người dùng để xóa!");

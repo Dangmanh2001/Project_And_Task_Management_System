@@ -1,5 +1,13 @@
 <div class="container-fluid">
   <h1 class="mb-4">Danh Sách Công Việc</h1>
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800"></h1>
+    <a
+      href="#"
+      class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+      ><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a
+    >
+  </div>
 
   <!-- Hiển thị thông báo lỗi và thành công -->
   <% if (success.length > 0) { %>
@@ -14,7 +22,30 @@
     <p><%= message %></p>
     <% }) %>
   </div>
+
   <% } %>
+  <form action="" method="GET">
+    <div class="input-group mb-4">
+      <input
+        type="text"
+        name="search"
+        class="form-control bg-light border-dark small"
+        placeholder="Search... "
+        aria-label="Search"
+        aria-describedby="basic-addon2"
+        value="<%= searchQuery  %>"
+      />
+      <div class="input-group-append">
+        <button class="btn btn-primary border-dark" type="submit">
+          <i class="fas fa-search fa-sm"></i>
+        </button>
+      </div>
+    </div>
+  </form>
+  <% if ( userPermissions.includes('task_view') ||
+  userPermissions.includes('task_create') ||
+  userPermissions.includes('task_edit') ||
+  userPermissions.includes('task_delete') ) { %>
 
   <!-- Bảng danh sách công việc -->
   <table class="table table-striped table-bordered table-hover">
@@ -48,9 +79,12 @@
         <td><%= task.Project ? task.Project.name : 'Chưa có dự án' %></td>
         <!-- Hiển thị tên dự án -->
         <td>
+          <% if ( userPermissions.includes('task_edit') ) { %>
           <a href="/edit-task/<%= task.id %>" class="btn btn-primary btn-sm">
             <i class="fas fa-edit"></i> Sửa
           </a>
+          <%}%> <% if ( userPermissions.includes('task_delete') ) { %>
+
           <form
             action="/delete-task/<%= task.id %>"
             method="POST"
@@ -61,6 +95,8 @@
               <i class="fas fa-trash-alt"></i> Xóa
             </button>
           </form>
+          <%}%> <% if ( userPermissions.includes('task_edit') ) { %>
+
           <a
             href="/add-user-to-task/<%= task.id%>"
             class="btn btn-success btn-sm"
@@ -73,6 +109,7 @@
           >
             <i class="fas fa-trash-alt"></i> Xóa người dùng khỏi công việc
           </a>
+          <%}%>
         </td>
       </tr>
       <% }) %> <% } else { %>
@@ -88,38 +125,195 @@
   <% if (totalPages > 1) { %>
   <nav aria-label="Page navigation">
     <ul class="pagination justify-content-center">
-      <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-        <a class="page-link" href="?page=1" aria-label="First"
-          >&laquo;&laquo;</a
-        >
-      </li>
+      <!-- Nút First -->
       <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
         <a
           class="page-link"
-          href="?page=<%= currentPage - 1 %>"
-          aria-label="Previous"
-          >&laquo;</a
+          href="?page=1&search=<%= searchQuery %>"
+          aria-label="First"
         >
+          <span aria-hidden="true">&laquo;&laquo;</span>
+        </a>
       </li>
+
+      <!-- Nút Previous -->
+      <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+        <a
+          class="page-link"
+          href="?page=<%= currentPage - 1 %>&search=<%= searchQuery %>"
+          aria-label="Previous"
+        >
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+
+      <!-- Các số trang -->
       <% for (let i = 1; i <= totalPages; i++) { %>
       <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+        <a class="page-link" href="?page=<%= i %>&search=<%= searchQuery %>"
+          ><%= i %></a
+        >
       </li>
       <% } %>
+
+      <!-- Nút Next -->
       <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
         <a
           class="page-link"
-          href="?page=<%= currentPage + 1 %>"
+          href="?page=<%= currentPage + 1 %>&search=<%= searchQuery %>"
           aria-label="Next"
-          >&raquo;</a
         >
+          <span aria-hidden="true">&raquo;</span>
+        </a>
       </li>
+
+      <!-- Nút Last -->
       <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-        <a class="page-link" href="?page=<%= totalPages %>" aria-label="Last"
-          >&raquo;&raquo;</a
+        <a
+          class="page-link"
+          href="?page=<%= totalPages %>&search=<%= searchQuery %>"
+          aria-label="Last"
         >
+          <span aria-hidden="true">&raquo;&raquo;</span>
+        </a>
       </li>
     </ul>
   </nav>
-  <% } %>
+  <% } %> <% }else{ %>
+  <table class="table table-striped table-bordered table-hover">
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Tên Công Việc</th>
+        <th>Mô Tả</th>
+        <th>Trạng Thái</th>
+        <th>Ngày Hết Hạn</th>
+        <th>Người Giao</th>
+        <th>Dự Án</th>
+        <!-- Thêm cột "Dự Án" -->
+        <th>Hành Động</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (tasksUser && tasksUser.length > 0) { %> <% tasksUser.forEach((task,
+      index) => { %>
+      <tr>
+        <td><%= index + 1 %></td>
+        <td><%= task.name %></td>
+        <td><%= task.description %></td>
+        <td><%= task.status %></td>
+        <td>
+          <%= task.due_date ? new Date(task.due_date).toLocaleString('vi-VN', {
+          weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric',
+          hour: '2-digit', minute: '2-digit' }) : '' %>
+        </td>
+        <td><%= task.User ? task.User.name : 'Chưa có người giao' %></td>
+        <td><%= task.Project ? task.Project.name : 'Chưa có dự án' %></td>
+        <!-- Hiển thị tên dự án -->
+        <td>
+          <% if ( userPermissions.includes('task_edit') ) { %>
+          <a href="/edit-task/<%= task.id %>" class="btn btn-primary btn-sm">
+            <i class="fas fa-edit"></i> Sửa
+          </a>
+          <%}%> <% if ( userPermissions.includes('task_delete') ) { %>
+
+          <form
+            action="/delete-task/<%= task.id %>"
+            method="POST"
+            style="display: inline"
+            onsubmit="return confirm('Bạn có chắc chắn muốn xóa công việc này?');"
+          >
+            <button type="submit" class="btn btn-danger btn-sm">
+              <i class="fas fa-trash-alt"></i> Xóa
+            </button>
+          </form>
+          <%}%> <% if ( userPermissions.includes('task_edit') ) { %>
+
+          <a
+            href="/add-user-to-task/<%= task.id%>"
+            class="btn btn-success btn-sm"
+          >
+            <i class="fas fa-user-plus"></i> Thêm người dùng cho công việc
+          </a>
+          <a
+            href="/remove-user-from-task/<%= task.id %>"
+            class="btn btn-danger btn-sm"
+          >
+            <i class="fas fa-trash-alt"></i> Xóa người dùng khỏi công việc
+          </a>
+          <%}%>
+        </td>
+      </tr>
+      <% }) %> <% } else { %>
+      <tr>
+        <td colspan="8" class="text-center">Không có công việc nào!</td>
+        <!-- Cập nhật colspan -->
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+
+  <!-- Phân trang -->
+  <% if (totalPagesUser > 1) { %>
+  <nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+      <!-- Nút First -->
+      <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+        <a
+          class="page-link"
+          href="?page=1&search=<%= searchQuery %>"
+          aria-label="First"
+        >
+          <span aria-hidden="true">&laquo;&laquo;</span>
+        </a>
+      </li>
+
+      <!-- Nút Previous -->
+      <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+        <a
+          class="page-link"
+          href="?page=<%= currentPage - 1 %>&search=<%= searchQuery %>"
+          aria-label="Previous"
+        >
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+
+      <!-- Các số trang -->
+      <% for (let i = 1; i <= totalPagesUser; i++) { %>
+      <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+        <a class="page-link" href="?page=<%= i %>&search=<%= searchQuery %>"
+          ><%= i %></a
+        >
+      </li>
+      <% } %>
+
+      <!-- Nút Next -->
+      <li
+        class="page-item <%= currentPage === totalPagesUser ? 'disabled' : '' %>"
+      >
+        <a
+          class="page-link"
+          href="?page=<%= currentPage + 1 %>&search=<%= searchQuery %>"
+          aria-label="Next"
+        >
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+
+      <!-- Nút Last -->
+      <li
+        class="page-item <%= currentPage === totalPagesUser ? 'disabled' : '' %>"
+      >
+        <a
+          class="page-link"
+          href="?page=<%= totalPagesUser %>&search=<%= searchQuery %>"
+          aria-label="Last"
+        >
+          <span aria-hidden="true">&raquo;&raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <% } %> <%}%>
 </div>

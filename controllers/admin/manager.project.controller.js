@@ -4,6 +4,8 @@ const Project = model.Project;
 const UserSocial = model.UserSocial;
 const Role = model.Role;
 const Task = model.Task;
+const Permission = model.Permission;
+const ActivityLog = model.ActivityLog;
 const { Op, Sequelize } = require("sequelize");
 
 module.exports = {
@@ -12,6 +14,7 @@ module.exports = {
 
     const success = req.flash("success", "");
     const error = req.flash("error", "");
+    const searchQuery = req.query.search || ""; // Lấy từ khóa tìm kiếm từ query (nếu có)
 
     const page = parseInt(req.query.page) || 1; // Lấy số trang từ query params, mặc định là 1
     const pageSize = 10; // Số lượng dự án mỗi trang
@@ -53,12 +56,126 @@ module.exports = {
           ],
         }, // Lấy thông tin người tạo dự án
       ],
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            name: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên dự án
+            },
+          },
+          {
+            description: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo mô tả dự án
+            },
+          },
+          {
+            status: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo trạng thái dự án
+            },
+          },
+        ],
+      },
       limit: pageSize,
       offset: offset,
     });
 
+    const projectsUser = await Project.findAll({
+      include: [
+        {
+          model: User,
+          required: true, // Lọc chỉ lấy các project mà người dùng hiện tại tham gia
+          as: "projects", // Đảm bảo rằng alias là "projects" trong mối quan hệ
+          where: {
+            id: req.user.id, // Lọc chỉ lấy các project mà người dùng hiện tại tham gia
+          },
+          include: [
+            {
+              model: Role, // Bao gồm thông tin vai trò của người dùng
+              required: false, // Không bắt buộc phải có thông tin vai trò
+            },
+          ],
+        },
+      ],
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            name: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên dự án
+            },
+          },
+          {
+            description: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo mô tả dự án
+            },
+          },
+          {
+            status: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo trạng thái dự án
+            },
+          },
+        ],
+      },
+
+      limit: pageSize,
+      offset: offset,
+    });
+
+    const totalProjectsUser = await Project.count({
+      include: [
+        {
+          model: User,
+          required: true,
+          as: "projects", // Sử dụng alias "projects" trong mối quan hệ
+          where: {
+            id: req.user.id, // Lọc theo người dùng hiện tại
+          },
+        },
+      ],
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            name: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên dự án
+            },
+          },
+          {
+            description: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo mô tả dự án
+            },
+          },
+          {
+            status: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo trạng thái dự án
+            },
+          },
+        ],
+      },
+    });
+
+    const totalPagesUser = Math.ceil(totalProjectsUser / pageSize);
+
     // Tổng số dự án để tính toán phân trang
-    const totalProjects = await Project.count();
+    const totalProjects = await Project.count({
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            name: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo tên dự án
+            },
+          },
+          {
+            description: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo mô tả dự án
+            },
+          },
+          {
+            status: {
+              [Sequelize.Op.like]: `%${searchQuery}%`, // Tìm kiếm theo trạng thái dự án
+            },
+          },
+        ],
+      },
+    });
     const totalPages = Math.ceil(totalProjects / pageSize);
 
     res.render("Admin/listProject", {
@@ -67,9 +184,12 @@ module.exports = {
       error,
       user,
       projects,
+      projectsUser,
       userPermissions,
+      searchQuery,
       currentPage: page,
       totalPages: totalPages,
+      totalPagesUser: totalPagesUser,
     });
   },
   addProject: async (req, res) => {
@@ -119,11 +239,6 @@ module.exports = {
       }
 
       // Kiểm tra người tạo dự án tồn tại hay không
-      const creator = await User.findByPk(req.user.id);
-      if (creator.role_id !== 1) {
-        req.flash("error", "Bạn không có quyền tạo dự án!");
-        return res.redirect("/add-project");
-      }
 
       // Thêm dự án mới vào cơ sở dữ liệu
       await Project.create({
@@ -134,7 +249,11 @@ module.exports = {
         status,
         created_by: creator.id, // Gán người tạo dự án
       });
-
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: `Bạn đã thêm một dự án`,
+        timestamp: new Date().toLocaleString(),
+      });
       req.flash("success", "Dự án đã được thêm thành công!");
       res.redirect("/add-project"); // Chuyển hướng về danh sách dự án
     } catch (error) {
@@ -207,6 +326,7 @@ module.exports = {
           {
             model: Project,
             required: false, // Không yêu cầu phải có dự án
+            as: "projects",
           },
         ],
       });
@@ -270,7 +390,11 @@ module.exports = {
         // Nếu chỉ có một giá trị trong user_id, thêm người dùng đó vào dự án
         await project.addUser(user_id); // Đảm bảo `addUser` đã được định nghĩa trong Sequelize association
       }
-
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: `Bạn đã thêm người dùng vào dự án ${project.name}`,
+        timestamp: new Date().toLocaleString(),
+      });
       req.flash("success", "Người dùng đã được thêm vào dự án!");
       res.redirect(`/add-user-to-project/${id}`);
     } catch (error) {
@@ -319,6 +443,7 @@ module.exports = {
           where: { id: project.id }, // Lọc người dùng tham gia vào dự án cụ thể
           through: { attributes: [] }, // Không cần lấy thông tin từ bảng trung gian
           required: true, // Chỉ lấy những người dùng có liên kết với dự án
+          as: "projects",
         },
         {
           model: UserSocial,
@@ -339,6 +464,7 @@ module.exports = {
           where: { id: project.id },
           through: { attributes: [] },
           required: true,
+          as: "projects",
         },
       ],
     });
@@ -384,7 +510,11 @@ module.exports = {
         // Nếu chỉ có một người dùng, xóa người đó khỏi dự án
         await project.removeUser(user_id); // Đảm bảo `removeUser` đã được định nghĩa trong Sequelize association
       }
-
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: `Bạn đã xóa người dùng khỏi dự án ${project.name}`,
+        timestamp: new Date().toLocaleString(),
+      });
       req.flash("success", "Người dùng đã được xóa khỏi dự án!");
       // Redirect về trang xóa người dùng khỏi dự án có kèm id
       res.redirect(`/remove-user-from-project/${id}`);
@@ -471,16 +601,6 @@ module.exports = {
         return res.redirect(`/edit-project/${id}`);
       }
 
-      // Kiểm tra người tạo dự án tồn tại hay không
-      const creator = await User.findByPk(created_by);
-      if (!creator) {
-        req.flash("error", "Người tạo dự án không tồn tại!");
-        return res.redirect(`/edit-project/${id}`);
-      }
-      if (creator.role_id !== 1) {
-        req.flash("error", "Người này không có quyền tạo dự án!");
-        return res.redirect(`/edit-project/${id}`);
-      }
       // Kiểm tra xem người sửa dự án có quyền sửa (người tạo dự án hoặc admin)
       const project = await Project.findByPk(id);
       if (!project) {
@@ -488,17 +608,16 @@ module.exports = {
         return res.redirect(`/edit-project/${id}`);
       }
 
-      if (req.user.id !== project.created_by && req.user.role_id !== 1) {
-        req.flash("error", "Bạn không có quyền sửa dự án này!");
-        return res.redirect(`/edit-project/${id}`); // Nếu không có quyền, quay lại danh sách dự án
-      }
-
       // Cập nhật dự án
       await Project.update(
         { name, description, start_date, end_date, status, created_by },
         { where: { id } }
       );
-
+      await ActivityLog.create({
+        user_id: req.user.id,
+        action: `Bạn đã cập nhât dự án ${name}`,
+        timestamp: new Date().toLocaleString(),
+      });
       req.flash("success", "Dự án đã được cập nhật thành công!");
       res.redirect(`/edit-project/${id}`); // Quay lại danh sách dự án
     } catch (error) {
@@ -512,6 +631,7 @@ module.exports = {
 
     // Kiểm tra nếu dự án không tồn tại
     const project = await Project.findByPk(id);
+    const projectName = project.name;
     if (!project) {
       req.flash("error", "Dự án không tồn tại!");
       return res.redirect("/list-project"); // Quay lại danh sách dự án nếu không tìm thấy
@@ -520,7 +640,11 @@ module.exports = {
     await Task.destroy({ where: { project_id: id } });
     // Tiến hành xóa dự án
     await Project.destroy({ where: { id } });
-
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: `Bạn đã xóa dự án ${projectName}`,
+      timestamp: new Date().toLocaleString(),
+    });
     req.flash("success", "Dự án đã được xóa thành công!");
     res.redirect("/list-project"); // Quay lại trang danh sách dự án
   },

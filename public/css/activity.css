@@ -1,8 +1,14 @@
 
   .activity-timeline {
+    
     position: relative;
   }
-
+  .activity-timeline {
+    max-height: 500px;  /* Chỉnh chiều cao tối đa của phần chứa timeline */
+    overflow-y: auto;   /* Khi nội dung vượt quá chiều cao, sẽ xuất hiện thanh cuộn dọc */
+    padding-right: 10px; /* Thêm khoảng cách để thanh cuộn không che nội dung */
+  }
+  
   .activity-item {
     padding: 1.5rem;
     border-radius: 12px;

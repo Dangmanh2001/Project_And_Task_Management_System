@@ -12,7 +12,7 @@ const googlePassport = require("./passports/googlePassport");
 const flash = require("connect-flash");
 const model = require("./models/index");
 const authMiddleware = require("./middleware/auth.middleware");
-
+const { startUpdateExpiredJobs } = require("./utils/checkUpdateExpired"); // Import utility
 var adminRouter = require("./routes/Admin/index");
 const authRouter = require("./routes/auth");
 const errorRouter = require("./routes/error");
@@ -65,6 +65,7 @@ app.use((req, res, next) => {
   res.locals.layout = "layouts/home.layout.ejs"; // Layout mặc định
   next();
 });
+startUpdateExpiredJobs();
 
 // Route
 app.use("/auth", authRouter);
@@ -76,7 +77,6 @@ app.use("/error", authMiddleware.isLoggedIn, errorRouter);
 app.use(function (req, res, next) {
   res.redirect("/error");
 });
-
 // error handler
 app.use(function (err, req, res, next) {
   res.locals.message = err.message;

@@ -21,7 +21,9 @@ router.post("/unlink/google", indexController.unlinkGoogle);
 router.post("/unlink/facebook", indexController.unlinkFacebook);
 router.post("/change-password", indexController.changePass);
 router.get("/activity", indexController.activity);
-router.get("/message", indexController.message);
+
+router.post("/activity/delete", indexController.deleteActivityAll);
+router.post("/activity/:id/delete", indexController.deleteActivityId);
 
 router.get("/assign-role/:id", indexController.assignRole);
 router.post("/assign-role/:id", indexController.handleAssignRole);
