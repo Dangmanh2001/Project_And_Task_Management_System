@@ -174,7 +174,7 @@ router.get(
 );
 router.get(
   "/add-role",
-  checkPermission("user_view"),
+  checkPermission("role_create"),
   managerPermissionController.addRole
 );
 router.post(

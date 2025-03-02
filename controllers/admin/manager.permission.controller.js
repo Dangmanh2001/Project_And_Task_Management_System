@@ -286,7 +286,7 @@ module.exports = {
     }
     await ActivityLog.create({
       user_id: req.user.id,
-      action: `Bạn đã thay đổi vai trò ${roles.name}`,
+      action: `Bạn đã thay đổi vai trò ${name}`,
       timestamp: new Date().toLocaleString(),
     });
     req.flash("success", "Sửa vai trò thành công!");

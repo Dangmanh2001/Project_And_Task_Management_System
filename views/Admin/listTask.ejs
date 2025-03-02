@@ -1,13 +1,21 @@
 <div class="container-fluid">
   <h1 class="mb-4">Danh Sách Công Việc</h1>
+  <% if (userPermissions.includes('task_view') &&
+  userPermissions.includes('task_create') &&
+  userPermissions.includes('task_edit') &&
+  userPermissions.includes('task_delete')) { %>
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800"></h1>
-    <a
-      href="#"
-      class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
-      ><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a
-    >
+    <form action="/generate-report/task" method="POST" style="display: inline">
+      <button
+        type="submit"
+        class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+      >
+        <i class="fas fa-download fa-sm text-white-50"></i> Generate Task Report
+      </button>
+    </form>
   </div>
+  <% } %>
 
   <!-- Hiển thị thông báo lỗi và thành công -->
   <% if (success.length > 0) { %>
@@ -42,10 +50,8 @@
       </div>
     </div>
   </form>
-  <% if ( userPermissions.includes('task_view') ||
-  userPermissions.includes('task_create') ||
-  userPermissions.includes('task_edit') ||
-  userPermissions.includes('task_delete') ) { %>
+  <% if ( userPermissions.includes('task_view') &&
+  userPermissions.includes('task_create') ) { %>
 
   <!-- Bảng danh sách công việc -->
   <table class="table table-striped table-bordered table-hover">

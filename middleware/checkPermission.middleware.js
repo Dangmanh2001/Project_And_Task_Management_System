@@ -18,12 +18,10 @@ const checkPermission = (requiredPermission) => {
         },
       },
     });
-
     // Lấy tất cả các quyền mà user có
     const userPermissions = user.Roles.flatMap((role) =>
       role.Permissions.map((permission) => permission.name)
     );
-
     // Kiểm tra nếu user có quyền yêu cầu
     if (userPermissions.includes(requiredPermission)) {
       return next(); // Nếu có quyền, tiếp tục xử lý route tiếp theo

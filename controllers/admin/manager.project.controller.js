@@ -48,6 +48,7 @@ module.exports = {
         {
           model: User,
           required: false,
+
           include: [
             {
               model: Role, // Bao gồm thông tin vai trò của người dùng
@@ -81,6 +82,16 @@ module.exports = {
 
     const projectsUser = await Project.findAll({
       include: [
+        {
+          model: User,
+          required: false,
+          include: [
+            {
+              model: Role, // Bao gồm thông tin vai trò của người dùng
+              required: false, // Không bắt buộc phải có thông tin vai trò
+            },
+          ],
+        },
         {
           model: User,
           required: true, // Lọc chỉ lấy các project mà người dùng hiện tại tham gia
@@ -119,6 +130,7 @@ module.exports = {
       limit: pageSize,
       offset: offset,
     });
+    console.log(projectsUser);
 
     const totalProjectsUser = await Project.count({
       include: [

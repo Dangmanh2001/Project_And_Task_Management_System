@@ -1,13 +1,25 @@
 <div class="container-fluid">
   <h1 class="mb-4">Danh sách dự án</h1>
+  <% if ( userPermissions.includes('project_view') &&
+  userPermissions.includes('project_create') &&
+  userPermissions.includes('project_edit') &&
+  userPermissions.includes('project_delete') ) { %>
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800"></h1>
-    <a
-      href="#"
-      class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
-      ><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a
+    <form
+      action="/generate-report/project"
+      method="POST"
+      style="display: inline"
     >
+      <button
+        type="submit"
+        class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+      >
+        <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
+      </button>
+    </form>
   </div>
+  <%}%>
 
   <!-- Thông báo nếu có lỗi hoặc thành công -->
   <% if (success.length > 0) { %>
@@ -41,10 +53,8 @@
       </div>
     </div>
   </form>
-  <% if ( userPermissions.includes('project_view') ||
-  userPermissions.includes('project_create') ||
-  userPermissions.includes('project_edit') ||
-  userPermissions.includes('project_delete') ) { %>
+  <% if ( userPermissions.includes('project_view') &&
+  userPermissions.includes('project_create') ) { %>
   <!-- Bảng danh sách dự án -->
   <table class="table table-striped table-bordered table-hover">
     <thead>
@@ -186,6 +196,7 @@
     </ul>
   </nav>
   <% } %> <%}else{%>
+  <!-- Bảng danh sách dự án -->
   <table class="table table-striped table-bordered table-hover">
     <thead>
       <tr>

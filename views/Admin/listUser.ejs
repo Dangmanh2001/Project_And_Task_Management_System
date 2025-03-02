@@ -2,11 +2,15 @@
   <h1 class="mb-4">Danh sách người dùng</h1>
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800"></h1>
-    <a
-      href="#"
-      class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
-      ><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a
-    >
+    <!-- Thay đổi từ <a> thành <form> để sử dụng POST -->
+    <form action="/generate-report/user" method="POST" style="display: inline">
+      <button
+        type="submit"
+        class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+      >
+        <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
+      </button>
+    </form>
   </div>
   <!-- Bảng danh sách người dùng -->
   <% if (success.length > 0) { %>

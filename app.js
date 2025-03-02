@@ -16,6 +16,7 @@ const { startUpdateExpiredJobs } = require("./utils/checkUpdateExpired"); // Imp
 var adminRouter = require("./routes/Admin/index");
 const authRouter = require("./routes/auth");
 const errorRouter = require("./routes/error");
+const generateRouter = require("./routes/generateReport");
 
 var app = express();
 
@@ -71,11 +72,12 @@ startUpdateExpiredJobs();
 app.use("/auth", authRouter);
 
 app.use("/", authMiddleware.isLoggedIn, adminRouter);
+app.use("/generate-report", authMiddleware.isLoggedIn, generateRouter);
 app.use("/error", authMiddleware.isLoggedIn, errorRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  res.redirect("/error");
+  next(createError(404));
 });
 // error handler
 app.use(function (err, req, res, next) {
