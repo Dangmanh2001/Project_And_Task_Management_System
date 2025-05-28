@@ -5,6 +5,9 @@
     </div>
     <div class="card-body" style="position: relative; height: 60vh">
       <canvas id="myChart"></canvas>
+      <p id="errorChart1" style="color: red; display: none">
+        Lỗi: Dữ liệu không hợp lệ hoặc không có sẵn để hiển thị biểu đồ.
+      </p>
     </div>
   </div>
 
@@ -15,84 +18,123 @@
     <div class="chart-container">
       <div class="card-body">
         <canvas id="myChart2"></canvas>
+        <p id="errorChart2" style="color: red; display: none">
+          Lỗi: Dữ liệu không hợp lệ hoặc không có sẵn để hiển thị biểu đồ.
+        </p>
       </div>
       <div class="card-body">
         <canvas id="myChart3"></canvas>
+        <p id="errorChart3" style="color: red; display: none">
+          Lỗi: Dữ liệu không hợp lệ hoặc không có sẵn để hiển thị biểu đồ.
+        </p>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+  // Lấy dữ liệu từ server
   const totalUsers = `<%= totalUsers %>`;
   const totalProjects = `<%= totalProjects %>`;
   const totalTasks = `<%= totalTasks %>`;
-  const status = `<%= status%>`;
-  const taskStatusValues = `<%= taskStatusValues%>`;
-  const projectStatusValues = `<%= projectStatusValues%>`;
+  const status = `<%= status %>`;
+  const taskStatusValues = `<%= taskStatusValues %>`;
+  const projectStatusValues = `<%= projectStatusValues %>`;
 
-  let myChart = document.getElementById("myChart").getContext("2d");
-  let massPopChart1 = new Chart(myChart, {
-    type: "bar",
-    data: {
-      labels: ["Users", "Projects", "Tasks"],
-      datasets: [
-        {
-          label: "Project Overview",
-          data: [totalUsers, totalProjects, totalTasks],
-          backgroundColor: [
-            "rgba(255, 99, 132, 0.2)",
-            "rgba(255, 159, 64, 0.2)",
-            "rgba(255, 205, 86, 0.2)",
-          ],
-          borderColor: [
-            "rgb(255, 99, 132)",
-            "rgb(255, 159, 64)",
-            "rgb(255, 205, 86)",
-          ],
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-    },
-  });
+  // Kiểm tra dữ liệu cho biểu đồ Overview
+  if (
+    !totalUsers ||
+    !totalProjects ||
+    !totalTasks ||
+    isNaN(totalUsers) ||
+    isNaN(totalProjects) ||
+    isNaN(totalTasks)
+  ) {
+    document.getElementById("errorChart1").style.display = "block";
+  } else {
+    let myChart = document.getElementById("myChart").getContext("2d");
+    let massPopChart1 = new Chart(myChart, {
+      type: "bar",
+      data: {
+        labels: ["Users", "Projects", "Tasks"],
+        datasets: [
+          {
+            label: "Project Overview",
+            data: [totalUsers, totalProjects, totalTasks],
+            backgroundColor: [
+              "rgba(255, 99, 132, 0.2)",
+              "rgba(255, 159, 64, 0.2)",
+              "rgba(255, 205, 86, 0.2)",
+            ],
+            borderColor: [
+              "rgb(255, 99, 132)",
+              "rgb(255, 159, 64)",
+              "rgb(255, 205, 86)",
+            ],
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
+  }
 
-  let myChart2 = document.getElementById("myChart2").getContext("2d");
-  let massPopChart2 = new Chart(myChart2, {
-    type: "pie",
-    data: {
-      labels: status.split(","),
-      datasets: [
-        {
-          label: "Task",
-          data: taskStatusValues.split(","),
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-    },
-  });
+  // Kiểm tra dữ liệu cho biểu đồ 2
+  if (
+    !status ||
+    !taskStatusValues ||
+    status.trim() === "" ||
+    taskStatusValues.trim() === ""
+  ) {
+    document.getElementById("errorChart2").style.display = "block";
+  } else {
+    let myChart2 = document.getElementById("myChart2").getContext("2d");
+    let massPopChart2 = new Chart(myChart2, {
+      type: "pie",
+      data: {
+        labels: status.split(","),
+        datasets: [
+          {
+            label: "Task",
+            data: taskStatusValues.split(","),
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
+  }
 
-  let myChart3 = document.getElementById("myChart3").getContext("2d");
-  let massPopChart3 = new Chart(myChart3, {
-    type: "pie",
-    data: {
-      labels: status.split(","),
-      datasets: [
-        {
-          label: "Project",
-          data: projectStatusValues.split(","),
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-    },
-  });
+  // Kiểm tra dữ liệu cho biểu đồ 3
+  if (
+    !status ||
+    !projectStatusValues ||
+    status.trim() === "" ||
+    projectStatusValues.trim() === ""
+  ) {
+    document.getElementById("errorChart3").style.display = "block";
+  } else {
+    let myChart3 = document.getElementById("myChart3").getContext("2d");
+    let massPopChart3 = new Chart(myChart3, {
+      type: "pie",
+      data: {
+        labels: status.split(","),
+        datasets: [
+          {
+            label: "Project",
+            data: projectStatusValues.split(","),
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
+  }
 </script>

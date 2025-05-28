@@ -42,8 +42,50 @@
 
   <!-- Hiển thị tên người dùng -->
   <div class="profile-info mt-4">
-    <p><strong>Name:</strong> <%= user.name %></p>
-    <p><strong>Email:</strong> <%= user.email %></p>
+    <div
+      class="card"
+      style="
+        border: 1px solid rgba(0, 0, 0, 0.01);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      "
+    >
+      <h4>Thông tin cơ bản</h4>
+
+      <form action="/update-profile" method="POST">
+        <p>
+          <strong>Name:</strong>
+          <input
+            type="text"
+            name="name"
+            class="form-control"
+            value="<%= user.name %>"
+          />
+        </p>
+        <p>
+          <strong>Email:</strong>
+          <input
+            type="email"
+            name="email"
+            class="form-control"
+            value="<%= user.email %>"
+          />
+        </p>
+
+        <!-- Nút submit với lớp button đẹp hơn -->
+        <div style="text-align: center; margin-top: 20px">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="padding: 10px 20px; font-size: 16px; border-radius: 5px"
+          >
+            Update Information
+          </button>
+        </div>
+      </form>
+    </div>
+
     <form action="/unlink/facebook" method="POST">
       <p>
         <strong>Facebook:</strong>

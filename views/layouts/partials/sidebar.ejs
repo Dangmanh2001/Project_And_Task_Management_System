@@ -170,7 +170,7 @@
   <div class="sidebar-heading">Overview</div>
 
   <!-- Nav Item - Pages Collapse Menu -->
-
+  <% if ( userPermissions.includes('chart_view')) { %>
   <!-- Nav Item - Charts -->
   <li class="nav-item">
     <a class="nav-link" href="/charts">
@@ -178,7 +178,7 @@
       <span>Charts</span></a
     >
   </li>
-
+  <% } %> <% if ( userPermissions.includes('table_view')) { %>
   <!-- Nav Item - Tables -->
   <li class="nav-item">
     <a class="nav-link" href="/tablesP">
@@ -193,7 +193,7 @@
       <span>Calendar Task</span></a
     >
   </li>
-
+  <% } %>
   <hr class="sidebar-divider d-none d-md-block" />
   <!-- Sidebar Toggler (Sidebar) -->
   <div class="text-center d-none d-md-inline">

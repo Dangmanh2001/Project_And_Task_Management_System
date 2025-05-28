@@ -3,7 +3,7 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     // Tạo một mảng các permission_id từ 1 đến 12 cho role_id = 1
-    const permissions = Array.from({ length: 16 }, (_, index) => ({
+    const permissions = Array.from({ length: 18 }, (_, index) => ({
       role_id: 1, // id của role
       permission_id: index + 1, // permission_id từ 1 đến 12
       createdAt: new Date(),

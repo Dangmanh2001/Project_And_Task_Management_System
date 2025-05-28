@@ -63,7 +63,7 @@ module.exports = {
         "Ngày tạo": user.createdAt, // Cột Ngày tạo
         "Cập nhật lần cuối": user.updatedAt, // Cột Cập nhật lần cuối
       }));
-
+      console.log(users.createdAt);
       // Tạo một workbook và worksheet
       const ws = xlsx.utils.json_to_sheet(data); // Chuyển đổi JSON thành worksheet
       const wb = xlsx.utils.book_new(); // Tạo một workbook mới
@@ -102,6 +102,14 @@ module.exports = {
           "createdAt",
           "updatedAt",
         ], // Lấy các trường cần thiết
+        include: [
+          {
+            model: User, // Liên kết với model User
+            through: { attributes: [] }, // Bỏ qua thông tin bảng trung gian
+            required: false, // Nếu không có người dùng trong dự án, không gây lỗi
+            as: "users", // Alias trong liên kết
+          },
+        ],
       });
 
       // Kiểm tra nếu không có dữ liệu
@@ -110,16 +118,24 @@ module.exports = {
       }
 
       // Tạo dữ liệu cho file Excel từ danh sách dự án
-      const data = projects.map((project, i) => ({
-        "Số thứ tự": i + 1,
-        "Tên dự án": project.name, // Cột Tên dự án
-        "Mô tả": project.description, // Cột Mô tả
-        "Ngày bắt đầu": project.start_date, // Cột Ngày bắt đầu
-        "Ngày kết thúc": project.end_date, // Cột Ngày kết thúc
-        "Trạng thái": project.status, // Cột Trạng thái
-        "Ngày tạo": project.createdAt, // Cột Ngày tạo
-        "Cập nhật lần cuối": project.updatedAt, // Cột Cập nhật lần cuối
-      }));
+      const data = projects.map((project, i) => {
+        const userNames = project.users.map((user) => user.name).join(", "); // Lấy tên người dùng và nối bằng dấu phẩy
+
+        return {
+          "Số thứ tự": i + 1,
+          "Tên dự án": project.name, // Cột Tên dự án
+          "Mô tả": project.description, // Cột Mô tả
+          "Ngày bắt đầu": project.start_date, // Cột Ngày bắt đầu
+          "Ngày kết thúc": project.end_date, // Cột Ngày kết thúc
+          "Trạng thái": project.status, // Cột Trạng thái
+          "Người dùng có trong dự án": userNames, // Cột Người dùng có trong dự án
+          "Ngày tạo": project.createdAt, // Cột Ngày tạo
+          "Cập nhật lần cuối": project.updatedAt, // Cột Cập nhật lần cuối
+        };
+      });
+
+      // Tiếp tục xử lý để xuất file Excel...
+      console.log(data); // In dữ liệu ra console để kiểm tra trước khi xuất file Excel
 
       // Tạo một workbook và worksheet
       const ws = xlsx.utils.json_to_sheet(data); // Chuyển đổi JSON thành worksheet
@@ -146,7 +162,7 @@ module.exports = {
   },
   task: async (req, res) => {
     try {
-      // Lấy danh sách tất cả tasks từ cơ sở dữ liệu (loại bỏ các trường không cần thiết)
+      // Lấy danh sách tất cả tasks từ cơ sở dữ liệu (bao gồm người dùng tham gia công việc)
       const tasks = await Task.findAll({
         attributes: [
           "id",
@@ -157,6 +173,14 @@ module.exports = {
           "createdAt",
           "updatedAt",
         ], // Lấy các trường cần thiết
+        include: [
+          {
+            model: User, // Liên kết với model User
+            through: { attributes: [] }, // Bỏ qua bảng trung gian nếu không cần thiết
+            required: false, // Không bắt buộc phải có người dùng trong công việc
+            as: "users", // Alias trong quan hệ
+          },
+        ],
       });
 
       // Kiểm tra nếu không có dữ liệu
@@ -165,15 +189,23 @@ module.exports = {
       }
 
       // Tạo dữ liệu cho file Excel từ danh sách tasks
-      const data = tasks.map((task, i) => ({
-        "Số thứ tự": i + 1,
-        "Tên nhiệm vụ": task.name, // Cột Tên nhiệm vụ
-        "Mô tả": task.description, // Cột Mô tả
-        "Trạng thái": task.status, // Cột Trạng thái
-        "Ngày đến hạn": task.due_date, // Cột Ngày đến hạn
-        "Ngày tạo": task.createdAt, // Cột Ngày tạo
-        "Cập nhật lần cuối": task.updatedAt, // Cột Cập nhật lần cuối
-      }));
+      const data = tasks.map((task, i) => {
+        const userNames = task.users.map((user) => user.name).join(", "); // Lấy tên người dùng và nối bằng dấu phẩy
+
+        return {
+          "Số thứ tự": i + 1,
+          "Tên nhiệm vụ": task.name, // Cột Tên nhiệm vụ
+          "Mô tả": task.description, // Cột Mô tả
+          "Trạng thái": task.status, // Cột Trạng thái
+          "Ngày đến hạn": task.due_date, // Cột Ngày đến hạn
+          "Ngày tạo": task.createdAt, // Cột Ngày tạo
+          "Cập nhật lần cuối": task.updatedAt, // Cột Cập nhật lần cuối
+          "Người dùng tham gia": userNames, // Cột Người dùng tham gia công việc
+        };
+      });
+
+      // Tiếp tục xử lý để xuất file Excel...
+      console.log(data); // In dữ liệu ra console để kiểm tra trước khi xuất file Excel
 
       // Tạo một workbook và worksheet
       const ws = xlsx.utils.json_to_sheet(data); // Chuyển đổi JSON thành worksheet

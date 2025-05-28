@@ -53,6 +53,10 @@ module.exports = {
           required: false,
           as: "users",
         },
+        {
+          model: User,
+          required: false,
+        },
       ],
       where: {
         [Sequelize.Op.or]: [
@@ -323,7 +327,6 @@ module.exports = {
       req.flash("error", "Vui lòng điền đầy đủ thông tin!");
       return res.redirect(`/edit-task/${taskId}`); // Quay lại trang chỉnh sửa nếu thiếu thông tin
     }
-    console.log(due_date, 11111);
     if (!due_date) {
       const result = await Task.update(
         { name, description, status, due_date: null, assignee, project_id },
@@ -413,8 +416,9 @@ module.exports = {
         },
         {
           model: Project,
-          required: false, // Không yêu cầu phải có dự án
-          as: "projects",
+          required: true, // Đảm bảo chỉ lấy những người dùng có dự án liên kết
+          as: "projects", // Alias đúng cho Projects
+          where: { id: task.project_id }, // Điều kiện lọc theo dự án cụ thể
         },
       ],
     });
@@ -428,6 +432,22 @@ module.exports = {
           ),
         },
       },
+      include: [
+        {
+          model: UserSocial,
+          required: false, // Không yêu cầu phải có thông tin UserSocial
+        },
+        {
+          model: Role,
+          required: false, // Không yêu cầu phải có thông tin Role
+        },
+        {
+          model: Project,
+          required: true, // Đảm bảo chỉ lấy những người dùng có dự án liên kết
+          as: "projects", // Alias đúng cho Projects
+          where: { id: task.project_id }, // Sửa lại alias ở đây
+        },
+      ],
     });
 
     const totalPages = Math.ceil(totalUsers / pageSize);
@@ -528,8 +548,8 @@ module.exports = {
           model: Task,
           where: { id: task.id }, // Lọc người dùng tham gia vào dự án cụ thể
           through: { attributes: [] }, // Không cần lấy thông tin từ bảng trung gian
-          required: false, // Chỉ lấy những người dùng có liên kết với dự án
-          as: "users",
+          required: true, // Chỉ lấy những người dùng có liên kết với dự án
+          as: "users", // Đảm bảo alias này khớp với association của bạn
         },
         {
           model: UserSocial,

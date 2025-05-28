@@ -148,6 +148,8 @@ module.exports = {
       "role_create",
       "role_edit",
       "role_delete",
+      "chart_view",
+      "table_view",
     ];
 
     for (let perm of permissionNames) {
@@ -274,6 +276,8 @@ module.exports = {
       "role_create",
       "role_edit",
       "role_delete",
+      "chart_view",
+      "table_view",
     ];
 
     for (let perm of permissionNames) {

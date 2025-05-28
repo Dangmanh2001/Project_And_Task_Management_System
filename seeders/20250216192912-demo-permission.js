@@ -81,6 +81,16 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
+      {
+        name: "chart_view", // Quyền "Xem" dành cho Chart
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: "table_view", // Quyền "Xem" dành cho Table
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]);
   },
 

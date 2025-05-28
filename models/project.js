@@ -3,6 +3,12 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Project extends Model {
     static associate(models) {
+      Project.belongsToMany(models.User, {
+        through: "UserProjects",
+        foreignKey: "project_id",
+        otherKey: "user_id",
+        as: "users",
+      });
       Project.belongsTo(models.User, {
         foreignKey: "created_by",
       });
@@ -10,12 +16,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "project_id",
         onDelete: "CASCADE", // Xóa tất cả tasks liên quan khi xóa dự án
       });
-      Project.belongsToMany(models.User, {
-        through: "UserProjects",
-        foreignKey: "project_id",
-        otherKey: "user_id",
-        as: "projects",
-      });
+
       Project.belongsToMany(models.Task, {
         through: "ProjectTasks",
         foreignKey: "project_id",

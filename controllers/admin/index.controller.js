@@ -299,6 +299,7 @@ module.exports = {
             return acc;
           },
           {
+            "Đã hết hạn": 0,
             "Hoàn thành": 0,
             "Chưa bắt đầu": 0,
             "Ngưng hoạt động": 0,
@@ -313,6 +314,7 @@ module.exports = {
       const projectStatusCount = countStatus(projects);
       const projectStatusValues = Object.values(projectStatusCount);
       const status = [
+        "Đã hết hạn",
         "Hoàn thành",
         "Chưa bắt đầu",
         "Ngưng hoạt động",
@@ -370,7 +372,7 @@ module.exports = {
       include: [
         {
           model: User,
-          as: "projects", // Alias cho mối quan hệ nhiều-nhiều giữa User và Project
+          as: "users", // Alias cho mối quan hệ nhiều-nhiều giữa User và Project
           through: {
             attributes: [], // Không lấy thông tin từ bảng trung gian
           },
@@ -462,7 +464,23 @@ module.exports = {
       events: JSON.stringify(events),
     });
   },
+  updateProfile: async (req, res) => {
+    const user = req.user;
+    const { name, email } = req.body;
+    if (!name || !email) {
+      req.flash("error", "Vui lòng nhập đầy đủ thông tin!");
+      return res.redirect("/profile");
+    }
+    user.update({ name, email });
+    req.flash("success", "Thay đổi thông tin thành công!");
+    await ActivityLog.create({
+      user_id: req.user.id,
+      action: "Bạn đã thay đổi thông tin cá nhân",
+      timestamp: new Date().toLocaleString(),
+    });
 
+    res.redirect("/profile");
+  },
   unlinkGoogle: async (req, res) => {
     const user = req.user;
     await ActivityLog.create({

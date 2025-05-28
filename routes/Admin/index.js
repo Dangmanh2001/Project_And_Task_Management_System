@@ -17,6 +17,7 @@ router.post(
   uploads.single("avatarInput"),
   indexController.updateAvatar
 );
+router.post("/update-profile", indexController.updateProfile);
 router.post("/unlink/google", indexController.unlinkGoogle);
 router.post("/unlink/facebook", indexController.unlinkFacebook);
 router.post("/change-password", indexController.changePass);
@@ -162,10 +163,10 @@ router.post(
   manageTaskController.deleteTask
 );
 
-router.get("/charts", indexController.chart);
+router.get("/charts", checkPermission("chart_view"), indexController.chart);
 
-router.get("/tablesP", indexController.tableP);
-router.get("/tablesT", indexController.tableT);
+router.get("/tablesP", checkPermission("table_view"), indexController.tableP);
+router.get("/tablesT", checkPermission("table_view"), indexController.tableT);
 
 router.get(
   "/list-roles",

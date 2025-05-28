@@ -95,7 +95,7 @@ module.exports = {
         {
           model: User,
           required: true, // Lọc chỉ lấy các project mà người dùng hiện tại tham gia
-          as: "projects", // Đảm bảo rằng alias là "projects" trong mối quan hệ
+          as: "users",
           where: {
             id: req.user.id, // Lọc chỉ lấy các project mà người dùng hiện tại tham gia
           },
@@ -130,14 +130,13 @@ module.exports = {
       limit: pageSize,
       offset: offset,
     });
-    console.log(projectsUser);
 
     const totalProjectsUser = await Project.count({
       include: [
         {
           model: User,
           required: true,
-          as: "projects", // Sử dụng alias "projects" trong mối quan hệ
+          as: "users", // Sử dụng alias "projects" trong mối quan hệ
           where: {
             id: req.user.id, // Lọc theo người dùng hiện tại
           },
@@ -251,6 +250,11 @@ module.exports = {
       }
 
       // Kiểm tra người tạo dự án tồn tại hay không
+      const creator = await User.findOne({
+        where: {
+          id: req.user.id,
+        },
+      });
 
       // Thêm dự án mới vào cơ sở dữ liệu
       await Project.create({

@@ -89,6 +89,19 @@
           </label>
         </div>
         <% }) %>
+        <h3>Các quyền khác</h3>
+        <% ['chart_view', 'table_view'].forEach(permission => { %>
+        <div class="mb-3 custom-control custom-switch">
+          <input type="checkbox" class="custom-control-input" id="<%= permission
+          %>" name="<%= permission %>" <%= roleData &&
+          roleData.permissions.includes(permission) ? 'checked' : '' %> />
+          <label class="custom-control-label" for="<%= permission %>">
+            <% if (permission === 'chart_view') { %> Xem biểu đồ <% } else if
+            (permission === 'table_view') { %> Xem lịch dự án và công việc <% }
+            %>
+          </label>
+        </div>
+        <% }) %>
       </div>
     </div>
 

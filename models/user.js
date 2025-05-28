@@ -3,6 +3,10 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
+      User.hasMany(models.Task, {
+        foreignKey: "assignee",
+        onDelete: "CASCADE",
+      });
       User.belongsToMany(models.Project, {
         through: "UserProjects",
         foreignKey: "user_id", // Cột khóa ngoại của user

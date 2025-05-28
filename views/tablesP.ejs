@@ -1,29 +1,48 @@
-<div id="calendar"></div>
+<div class="container-fluid">
+  <div id="calendar"></div>
+  <div id="errorMessage" style="color: red; display: none">
+    Lỗi: Không có sự kiện nào để hiển thị.
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-<% if ( userPermissions.includes('user_edit') ||
+
+<% if (userPermissions.includes('user_edit') ||
 userPermissions.includes('user_delete') || userPermissions.includes('user_view')
-|| userPermissions.includes('user_create') ) { %>
+|| userPermissions.includes('user_create')) { %>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     var calendarEl = document.getElementById("calendar");
     const events = <%- eventsAdmin %>;
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: "dayGridMonth",
-      events: events,
-    });
-    calendar.render();
-  });
+
+    // Kiểm tra dữ liệu
+    console.log('eventsAdmin:', events);  // Kiểm tra giá trị eventsAdmin
+
+
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        events: events,
+      });
+      calendar.render();
+    }
+  );
 </script>
-<% }else{ %>
+<% } else { %>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     var calendarEl = document.getElementById("calendar");
     const events = <%- events %>;
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: "dayGridMonth",
-      events: events,
-    });
-    calendar.render();
+
+    // Kiểm tra dữ liệu
+    console.log('events:', events);  // Kiểm tra giá trị events
+
+
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        events: events,
+      });
+      calendar.render();
+
   });
 </script>
-<%}%>
+<% } %>
